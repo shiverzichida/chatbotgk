@@ -169,13 +169,38 @@ export default function AdminPage() {
         setTotalUsersCount(userCount);
       }
 
-      // 3. Fetch unique chapters for Playground filter
+      // 3. Fetch unique chapters for Playground filter and Document list
       const { data: chaptersData, error: chaptersErr } = await supabase
         .from('document_chunks')
-        .select('chapter_title');
+        .select('chapter_title, created_at');
       if (!chaptersErr && chaptersData) {
         const uniqueChapters = Array.from(new Set(chaptersData.map((d: any) => d.chapter_title).filter(Boolean)));
         setAvailableChapters(uniqueChapters as string[]);
+
+        // Group by chapter_title to get latest upload dates
+        const map = new Map<string, string>();
+        chaptersData.forEach((item: any) => {
+          if (item.chapter_title) {
+            const dateStr = item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            if (!map.has(item.chapter_title) || dateStr > map.get(item.chapter_title)!) {
+              map.set(item.chapter_title, dateStr);
+            }
+          }
+        });
+
+        // Convert to document list format
+        const docList = Array.from(map.entries()).map(([title, date], index) => ({
+          id: String(index + 1),
+          title: title,
+          type: 'Nutrition Guideline',
+          size: 'Saved to DB',
+          status: 'processed',
+          date: date
+        }));
+
+        if (docList.length > 0) {
+          setDocuments(docList);
+        }
       }
     } catch (e) {
       console.warn('Gagal memuat statistik database:', e);
