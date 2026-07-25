@@ -380,7 +380,7 @@ export default function ChatPage() {
                   ? 'bg-zinc-800 text-white rounded-tr-none' 
                   : 'bg-white dark:bg-zinc-900 text-zinc-850 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-800 rounded-tl-none'
               }`}>
-                <p>{msg.text}</p>
+                {renderMessageText(msg.text)}
                 <span className="block text-[10px] mt-1.5 text-right opacity-60">
                   {msg.time}
                 </span>
@@ -428,3 +428,76 @@ export default function ChatPage() {
     </div>
   );
 }
+
+// Fungsi pembantu untuk memparsing markdown sederhana (bold, list item, subheaders)
+const renderMessageText = (text: string) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-2">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        
+        // Headers
+        if (trimmed.startsWith('###')) {
+          return (
+            <h3 key={idx} className="text-sm font-extrabold text-zinc-950 dark:text-zinc-50 mt-4 mb-2 tracking-tight">
+              {parseBold(trimmed.replace(/^###\s*/, ''))}
+            </h3>
+          );
+        }
+        if (trimmed.startsWith('##')) {
+          return (
+            <h2 key={idx} className="text-base font-black text-zinc-950 dark:text-zinc-50 mt-5 mb-2.5 tracking-tight">
+              {parseBold(trimmed.replace(/^##\s*/, ''))}
+            </h2>
+          );
+        }
+        if (trimmed.startsWith('#')) {
+          return (
+            <h1 key={idx} className="text-lg font-black text-zinc-950 dark:text-zinc-50 mt-6 mb-3 tracking-tight">
+              {parseBold(trimmed.replace(/^#\s*/, ''))}
+            </h1>
+          );
+        }
+        
+        // Bullet points
+        if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
+          return (
+            <ul key={idx} className="list-disc pl-5 my-0.5 text-zinc-800 dark:text-zinc-200">
+              <li className="leading-relaxed">
+                {parseBold(trimmed.replace(/^[*|-]\s*/, ''))}
+              </li>
+            </ul>
+          );
+        }
+        
+        // Empty lines
+        if (!trimmed) {
+          return <div key={idx} className="h-2" />;
+        }
+        
+        // Normal paragraph
+        return (
+          <p key={idx} className="leading-relaxed text-zinc-850 dark:text-zinc-150">
+            {parseBold(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
+const parseBold = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={idx} className="font-extrabold text-zinc-900 dark:text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};

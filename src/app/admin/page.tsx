@@ -1265,7 +1265,7 @@ export default function AdminPage() {
                         ? 'bg-emerald-600 text-white border-transparent rounded-tr-none'
                         : 'bg-white dark:bg-zinc-850 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800 rounded-tl-none'
                     }`}>
-                      <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                      {renderMessageText(msg.text)}
                       <span className={`block text-[10px] mt-2.5 ${msg.sender === 'user' ? 'text-emerald-100' : 'text-zinc-400'}`}>
                         {msg.time}
                       </span>
@@ -1428,7 +1428,7 @@ export default function AdminPage() {
                               ? 'bg-white dark:bg-zinc-850 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800 rounded-tl-none'
                               : 'bg-emerald-600 text-white border-transparent rounded-tr-none'
                           }`}>
-                            <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                            {renderMessageText(msg.content)}
                             <span className={`block text-[9px] mt-2 ${msg.sender === 'user' ? 'text-zinc-400' : 'text-emerald-100'}`}>
                               {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -1829,3 +1829,76 @@ export default function AdminPage() {
     </div>
   );
 }
+
+// Fungsi pembantu untuk memparsing markdown sederhana (bold, list item, subheaders)
+const renderMessageText = (text: string) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-2">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        
+        // Headers
+        if (trimmed.startsWith('###')) {
+          return (
+            <h3 key={idx} className="text-sm font-extrabold text-zinc-950 dark:text-zinc-50 mt-4 mb-2 tracking-tight">
+              {parseBold(trimmed.replace(/^###\s*/, ''))}
+            </h3>
+          );
+        }
+        if (trimmed.startsWith('##')) {
+          return (
+            <h2 key={idx} className="text-base font-black text-zinc-950 dark:text-zinc-50 mt-5 mb-2.5 tracking-tight">
+              {parseBold(trimmed.replace(/^##\s*/, ''))}
+            </h2>
+          );
+        }
+        if (trimmed.startsWith('#')) {
+          return (
+            <h1 key={idx} className="text-lg font-black text-zinc-950 dark:text-zinc-50 mt-6 mb-3 tracking-tight">
+              {parseBold(trimmed.replace(/^#\s*/, ''))}
+            </h1>
+          );
+        }
+        
+        // Bullet points
+        if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
+          return (
+            <ul key={idx} className="list-disc pl-5 my-0.5 text-zinc-800 dark:text-zinc-200">
+              <li className="leading-relaxed">
+                {parseBold(trimmed.replace(/^[*|-]\s*/, ''))}
+              </li>
+            </ul>
+          );
+        }
+        
+        // Empty lines
+        if (!trimmed) {
+          return <div key={idx} className="h-2" />;
+        }
+        
+        // Normal paragraph
+        return (
+          <p key={idx} className="leading-relaxed text-zinc-850 dark:text-zinc-150">
+            {parseBold(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
+const parseBold = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={idx} className="font-extrabold text-zinc-900 dark:text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
