@@ -788,11 +788,11 @@ export default function AdminPage() {
       </header>
 
       {/* Tabs Subheader */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex-shrink-0">
-        <div className="max-w-7xl mx-auto flex gap-4 h-12">
+      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex-shrink-0 overflow-x-auto">
+        <div className="max-w-7xl mx-auto flex gap-2 sm:gap-4 h-12 min-w-max">
           <button
             onClick={() => setActiveTab('docs')}
-            className={`h-full px-4 text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+            className={`h-full px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'docs'
                 ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -804,7 +804,7 @@ export default function AdminPage() {
           
           <button
             onClick={() => setActiveTab('playground')}
-            className={`h-full px-4 text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+            className={`h-full px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'playground'
                 ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -816,7 +816,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('users')}
-            className={`h-full px-4 text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+            className={`h-full px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'users'
                 ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -828,7 +828,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('details')}
-            className={`h-full px-4 text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
+            className={`h-full px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 transition-all ${
               activeTab === 'details'
                 ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -1353,7 +1353,7 @@ export default function AdminPage() {
         {activeTab === 'users' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-6rem)] overflow-hidden">
             {/* User List Panel (Kiri) */}
-            <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col h-full overflow-hidden">
+            <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex-col h-full overflow-hidden`}>
               <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-3">
                   <Users className="w-5 h-5 text-emerald-600" />
@@ -1413,18 +1413,26 @@ export default function AdminPage() {
             </div>
 
             {/* Chat Intervention Window (Tengah & Kanan) */}
-            <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col h-full overflow-hidden">
+            <div className={`${selectedUser ? 'flex' : 'hidden lg:flex'} lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex-col h-full overflow-hidden`}>
               {selectedUser ? (
                 <>
                   {/* Active Header */}
                   <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/30 flex-shrink-0">
-                    <div>
-                      <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                        Memantau Chat: {selectedUser.full_name || 'User'}
-                      </h3>
-                      <p className="text-[10px] text-zinc-400">
-                        Sesi aktif: {activeSessionId || <Loader2 className="w-3 h-3 animate-spin inline ml-1" />} (Perbarui otomatis setiap 3 detik)
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setSelectedUser(null)} 
+                        className="lg:hidden text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-900/50"
+                      >
+                        ← User List
+                      </button>
+                      <div>
+                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
+                          Memantau Chat: {selectedUser.full_name || 'User'}
+                        </h3>
+                        <p className="text-[10px] text-zinc-400">
+                          Sesi aktif: {activeSessionId || <Loader2 className="w-3 h-3 animate-spin inline ml-1" />} (Perbarui otomatis setiap 3 detik)
+                        </p>
+                      </div>
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900/40 px-2.5 py-1 rounded-full animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -1512,7 +1520,7 @@ export default function AdminPage() {
         {activeTab === 'details' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-6rem)] overflow-hidden">
             {/* User List Panel (Kiri) */}
-            <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col h-full overflow-hidden">
+            <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex-col h-full overflow-hidden`}>
               <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-3">
                   <Users className="w-5 h-5 text-emerald-600" />
@@ -1572,9 +1580,17 @@ export default function AdminPage() {
             </div>
 
             {/* User Details & InBody Logs Panel (Kanan) */}
-            <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col h-full overflow-y-auto p-6">
+            <div className={`${selectedUser ? 'flex' : 'hidden lg:flex'} lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex-col h-full overflow-y-auto p-6`}>
               {selectedUser ? (
                 <div className="space-y-6">
+                  {/* Mobile Back Button */}
+                  <button 
+                    onClick={() => setSelectedUser(null)} 
+                    className="lg:hidden text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 mb-2 self-start"
+                  >
+                    ← Kembali ke Daftar User
+                  </button>
+
                   {/* Title */}
                   <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4">
                     <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50">
