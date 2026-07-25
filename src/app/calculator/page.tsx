@@ -22,7 +22,9 @@ import {
   Menu,
   X,
   Info,
-  ChevronRight
+  ChevronRight,
+  Utensils,
+  Dumbbell
 } from 'lucide-react';
 
 export default function CalculatorPage() {
@@ -264,9 +266,17 @@ export default function CalculatorPage() {
             <MessageSquare className="w-4 h-4" />
             <span>Chatbot AI</span>
           </Link>
+          <Link href="/food-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Utensils className="w-4 h-4 text-emerald-500" />
+            <span>Jurnal Makanan</span>
+          </Link>
+          <Link href="/workout-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Dumbbell className="w-4 h-4 text-emerald-500" />
+            <span>Jurnal Olahraga</span>
+          </Link>
           <Link href="/metrics" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <TrendingUp className="w-4 h-4" />
-            <span>Log Metrik & Gizi</span>
+            <span>Komposisi Tubuh & Target</span>
           </Link>
           <Link href="/calculator" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
             <Calculator className="w-4 h-4 text-emerald-500" />
@@ -340,9 +350,17 @@ export default function CalculatorPage() {
                 <MessageSquare className="w-4 h-4" />
                 <span>Chatbot AI</span>
               </Link>
+              <Link href="/food-log" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 text-sm">
+                <Utensils className="w-4 h-4 text-emerald-500" />
+                <span>Jurnal Makanan</span>
+              </Link>
+              <Link href="/workout-log" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 text-sm">
+                <Dumbbell className="w-4 h-4 text-emerald-500" />
+                <span>Jurnal Olahraga</span>
+              </Link>
               <Link href="/metrics" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 text-sm">
                 <TrendingUp className="w-4 h-4" />
-                <span>Log Metrik & Gizi</span>
+                <span>Komposisi Tubuh & Target</span>
               </Link>
               <Link href="/calculator" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm">
                 <Calculator className="w-4 h-4 text-emerald-500" />

@@ -667,9 +667,17 @@ export default function MetricsPage() {
             <MessageSquare className="w-4 h-4" />
             <span>Chatbot AI</span>
           </Link>
+          <Link href="/food-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Utensils className="w-4 h-4 text-emerald-500" />
+            <span>Jurnal Makanan</span>
+          </Link>
+          <Link href="/workout-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Dumbbell className="w-4 h-4 text-emerald-500" />
+            <span>Jurnal Olahraga</span>
+          </Link>
           <Link href="/metrics" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
-            <span>Log Metrik & Gizi</span>
+            <span>Komposisi Tubuh & Target</span>
           </Link>
           <Link href="/calculator" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <Calculator className="w-4 h-4 text-emerald-500" />
@@ -756,12 +764,28 @@ export default function MetricsPage() {
                 <span>Chatbot AI</span>
               </Link>
               <Link 
+                href="/food-log" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
+              >
+                <Utensils className="w-4 h-4 text-emerald-500" />
+                <span>Jurnal Makanan</span>
+              </Link>
+              <Link 
+                href="/workout-log" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
+              >
+                <Dumbbell className="w-4 h-4 text-emerald-500" />
+                <span>Jurnal Olahraga</span>
+              </Link>
+              <Link 
                 href="/metrics" 
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors"
               >
                 <TrendingUp className="w-4 h-4 text-emerald-500" />
-                <span>Log Metrik & Gizi</span>
+                <span>Komposisi Tubuh & Target</span>
               </Link>
               <Link 
                 href="/calculator" 
@@ -892,319 +916,6 @@ export default function MetricsPage() {
             )}
           </section>
 
-          {/* Section: Daily Macro Tracker & Food Logger */}
-          <section className="space-y-6">
-            {/* Header / Banner */}
-            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
-                    <Utensils className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Log Nutrisi & Makanan Hari Ini</h3>
-                    <p className="text-xs text-zinc-400">Pantau Asupan Kalori & Protein Harian Anda</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowTdeeModal(true)}
-                  className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-all flex items-center justify-center gap-2"
-                >
-                  <Calculator className="w-4 h-4" />
-                  <span>Kalkulator TDEE & Makro</span>
-                </button>
-              </div>
-
-              {/* Progress Bars (Kalori & Protein) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Kalori Progress */}
-                <div className="bg-zinc-50 dark:bg-zinc-950 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-zinc-400">Asupan Kalori Hari Ini</p>
-                      <h4 className="text-2xl font-black text-zinc-900 dark:text-zinc-50 mt-0.5">
-                        {todayCaloriesConsumed} <span className="text-xs font-normal text-zinc-400">/ {dailyCaloriesTarget} kcal</span>
-                      </h4>
-                    </div>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                      todayCaloriesConsumed <= dailyCaloriesTarget
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400'
-                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400'
-                    }`}>
-                      {todayCaloriesConsumed <= dailyCaloriesTarget
-                        ? `Sisa ${dailyCaloriesTarget - todayCaloriesConsumed} kcal`
-                        : `Surplus +${todayCaloriesConsumed - dailyCaloriesTarget} kcal`}
-                    </span>
-                  </div>
-                  <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        todayCaloriesConsumed <= dailyCaloriesTarget ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`}
-                      style={{ width: `${Math.min(100, Math.round((todayCaloriesConsumed / (dailyCaloriesTarget || 1)) * 100))}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Protein Progress */}
-                <div className="bg-zinc-50 dark:bg-zinc-950 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-zinc-400">Asupan Protein Hari Ini</p>
-                      <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                        {todayProteinConsumed} <span className="text-xs font-normal text-zinc-400">/ {dailyProteinTarget} gram</span>
-                      </h4>
-                    </div>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                      todayProteinConsumed >= dailyProteinTarget
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400'
-                        : 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-400'
-                    }`}>
-                      {todayProteinConsumed >= dailyProteinTarget
-                        ? 'Target Protein Tercapai 🎉'
-                        : `Kurang ${dailyProteinTarget - todayProteinConsumed} g`}
-                    </span>
-                  </div>
-                  <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.round((todayProteinConsumed / (dailyProteinTarget || 1)) * 100))}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Food Form & Today's Meals List */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Form Input Makanan */}
-              <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2 mb-4">
-                  <Plus className="w-5 h-5 text-emerald-600" />
-                  <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Catat Asupan Makan</h4>
-                </div>
-                <form onSubmit={handleFoodSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1">Tanggal</label>
-                    <input 
-                      type="date" 
-                      required 
-                      value={foodForm.date} 
-                      onChange={e => setFoodForm({ ...foodForm, date: e.target.value })}
-                      className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1">Waktu Makan</label>
-                    <select 
-                      value={foodForm.mealType} 
-                      onChange={e => setFoodForm({ ...foodForm, mealType: e.target.value as any })}
-                      className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 capitalize"
-                    >
-                      <option value="sarapan">🌅 Sarapan</option>
-                      <option value="makan_siang">☀️ Makan Siang</option>
-                      <option value="makan_malam">🌙 Makan Malam</option>
-                      <option value="snack">🍿 Snack / Camilan</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1">Nama Makanan & Porsi</label>
-                    <input 
-                      type="text" 
-                      required 
-                      placeholder="Contoh: Dada Ayam 150g & Nasi Merah" 
-                      value={foodForm.foodName} 
-                      onChange={e => setFoodForm({ ...foodForm, foodName: e.target.value })}
-                      className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-zinc-400 mb-1">Kalori (kcal)</label>
-                      <input 
-                        type="number" 
-                        required 
-                        placeholder="350" 
-                        value={foodForm.calories} 
-                        onChange={e => setFoodForm({ ...foodForm, calories: e.target.value })}
-                        className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-zinc-400 mb-1">Protein (gram)</label>
-                      <input 
-                        type="number" 
-                        placeholder="30" 
-                        value={foodForm.protein} 
-                        onChange={e => setFoodForm({ ...foodForm, protein: e.target.value })}
-                        className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                    </div>
-                  </div>
-                  <button 
-                    type="submit" 
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm transition-all shadow-md mt-2 flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Tambahkan Makanan</span>
-                  </button>
-                </form>
-              </div>
-
-              {/* List Makanan Hari Ini */}
-              <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Daftar Makanan Terkonsumsi Hari Ini</h4>
-                    <span className="text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full text-zinc-500">
-                      {foodLogs.length} Menu
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                    {foodLogs.length > 0 ? (
-                      foodLogs.map((item) => (
-                        <div 
-                          key={item.id} 
-                          className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/40 flex items-center justify-between gap-3"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">
-                              {item.meal_type === 'sarapan' ? '🌅' : item.meal_type === 'makan_siang' ? '☀️' : item.meal_type === 'makan_malam' ? '🌙' : '🍿'}
-                            </span>
-                            <div>
-                              <h5 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 capitalize">{item.food_name}</h5>
-                              <p className="text-[10px] text-zinc-400 capitalize">
-                                {item.meal_type.replace('_', ' ')} • <span className="font-semibold text-emerald-600 dark:text-emerald-400">{item.protein || 0}g protein</span>
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-black text-zinc-800 dark:text-zinc-200">
-                              {item.calories} kcal
-                            </span>
-                            <button 
-                              onClick={() => handleDeleteFood(item.id)}
-                              className="text-zinc-400 hover:text-red-500 p-1 transition-colors"
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="py-12 text-center text-zinc-400">
-                        <Utensils className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                        <p className="text-xs">Belum ada makanan yang dicatat hari ini.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-xs text-zinc-500">
-                  <span>Total Hari Ini:</span>
-                  <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                    {todayCaloriesConsumed} kcal / {todayProteinConsumed}g protein
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Section: Daily Workout Logger */}
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center gap-2 mb-6">
-                <Dumbbell className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Log Olahraga</h3>
-              </div>
-              <form onSubmit={handleWorkoutSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-zinc-500 mb-1.5">Tanggal</label>
-                  <input type="date" required value={workoutForm.date} onChange={e => setWorkoutForm({...workoutForm, date: e.target.value})} className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-zinc-500 mb-1.5">Jenis Olahraga</label>
-                  <select required value={workoutForm.workoutType} onChange={e => setWorkoutForm({...workoutForm, workoutType: e.target.value})} className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-zinc-900 dark:text-zinc-100">
-                    <option value="Latihan Beban">Latihan Beban</option>
-                    <option value="Kardio">Kardio (Lari, Sepeda, dll)</option>
-                    <option value="HIIT">HIIT / Crossfit</option>
-                    <option value="Yoga/Pilates">Yoga / Pilates</option>
-                    <option value="Olahraga Permainan">Olahraga Permainan</option>
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1.5">Durasi (Menit)</label>
-                    <input type="number" required placeholder="45" value={workoutForm.duration} onChange={e => setWorkoutForm({...workoutForm, duration: e.target.value})} className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1.5">Intensitas</label>
-                    <select required value={workoutForm.intensity} onChange={e => setWorkoutForm({...workoutForm, intensity: e.target.value})} className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-zinc-900 dark:text-zinc-100">
-                      <option value="ringan">Ringan</option>
-                      <option value="sedang">Sedang</option>
-                      <option value="berat">Berat</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-zinc-500 mb-1.5">Catatan (Opsional)</label>
-                  <input type="text" placeholder="Misal: Latihan dada dan triceps" value={workoutForm.notes} onChange={e => setWorkoutForm({...workoutForm, notes: e.target.value})} className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                </div>
-                <button type="submit" className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-zinc-800 dark:hover:bg-zinc-200 mt-2">
-                  Catat Olahraga
-                </button>
-              </form>
-            </div>
-
-            <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Olahraga Minggu Ini</h3>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    {workoutLogs.length} dari {activeTarget ? activeTarget.weekly_workouts_target : 3} Sesi Tercapai
-                  </p>
-                </div>
-                {activeTarget && (
-                  <div className="w-12 h-12 rounded-full border-4 border-emerald-100 dark:border-emerald-950 flex items-center justify-center relative">
-                    <svg className="w-full h-full absolute -rotate-90 transform" viewBox="0 0 36 36">
-                      <path className="text-emerald-500" strokeDasharray={`${Math.min(100, (workoutLogs.length / activeTarget.weekly_workouts_target) * 100)}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
-                    </svg>
-                    <span className="text-xs font-bold">{Math.round(Math.min(100, (workoutLogs.length / (activeTarget.weekly_workouts_target || 1)) * 100))}%</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-                {workoutLogs.length > 0 ? workoutLogs.map(log => (
-                  <div key={log.id} className="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 flex items-start gap-4">
-                    <div className={`p-2.5 rounded-lg ${
-                      log.intensity === 'berat' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400' :
-                      log.intensity === 'sedang' ? 'bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400' :
-                      'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
-                    }`}>
-                      <Flame className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white">{log.workout_type}</h4>
-                        <span className="text-[10px] uppercase font-bold text-zinc-400">{log.duration_minutes} Menit</span>
-                      </div>
-                      <p className="text-xs text-zinc-500">{new Date(log.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })} • Intensitas: <span className="capitalize">{log.intensity}</span></p>
-                      {log.notes && <p className="text-xs text-zinc-400 mt-2 bg-zinc-100 dark:bg-zinc-900 p-2 rounded-md border border-zinc-200 dark:border-zinc-800 italic">"{log.notes}"</p>}
-                    </div>
-                  </div>
-                )) : (
-                  <div className="h-full flex flex-col items-center justify-center text-zinc-400 py-10">
-                    <Dumbbell className="w-8 h-8 mb-3 opacity-20" />
-                    <p className="text-sm">Belum ada olahraga yang dicatat minggu ini.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
 
           {/* Section: InBody C-S-D Muscle-Fat Analysis Status Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
