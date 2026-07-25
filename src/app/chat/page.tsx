@@ -182,11 +182,13 @@ export default function ChatPage() {
     }
   };
 
+  // Hanya scroll ke bawah saat pertama kali memuat histori chat
   useEffect(() => {
     if (authorized) {
       scrollToBottom();
     }
-  }, [messages, isTyping, authorized]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authorized]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,6 +206,9 @@ export default function ChatPage() {
     setMessages(updatedMessages);
     setInput('');
     setIsTyping(true);
+    
+    // Scroll ke bawah agar pesan user & indikator mengetik terlihat
+    setTimeout(scrollToBottom, 50);
 
     try {
       // Panggil API route Next.js kita, kirim sessionId

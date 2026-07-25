@@ -416,9 +416,9 @@ export default function AdminPage() {
   };
 
   // SCROLL REFS
-  useEffect(() => {
+  const scrollPlaygroundToBottom = () => {
     playgroundEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [playgroundMessages, isPlaygroundTyping]);
+  };
 
   useEffect(() => {
     userChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -619,6 +619,7 @@ export default function AdminPage() {
     setPlaygroundMessages((prev) => [...prev, userMsg]);
     setPlaygroundInput('');
     setIsPlaygroundTyping(true);
+    setTimeout(scrollPlaygroundToBottom, 50);
     setLastCitations([]);
 
     try {
