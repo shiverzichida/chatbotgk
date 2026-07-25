@@ -744,7 +744,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="h-screen w-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col font-sans overflow-hidden">
+    <div className="min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 flex flex-col font-sans">
       {/* Top Header */}
       <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -755,14 +755,14 @@ export default function AdminPage() {
             <div>
               <h1 className="text-sm font-bold text-zinc-900 dark:text-zinc-50 tracking-tight flex items-center gap-2">
                 <span>Console Admin Gizi Kebugaran</span>
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono hidden sm:inline-block">
                   SUPABASE ACTIVE
                 </span>
               </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Panel Kontrol & Intervensi Gizi Kebugaran AI</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 hidden sm:block">Panel Kontrol & Intervensi Gizi Kebugaran AI</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{user?.name}</p>
               <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 font-bold uppercase">
@@ -774,7 +774,7 @@ export default function AdminPage() {
               className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-250 dark:border-emerald-900/50 hover:bg-emerald-100/70 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-450 transition-colors"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Kembali ke Chat</span>
+              <span className="hidden sm:inline">Kembali ke Chat</span>
             </Link>
             <button 
               onClick={logout}
@@ -841,10 +841,10 @@ export default function AdminPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-hidden p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+      <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         
         {/* STATS HEADER */}
-        <div className="grid grid-cols-3 gap-4 mb-6 flex-shrink-0">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
           <div className="bg-white dark:bg-zinc-900 px-5 py-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex items-center gap-4">
             <div className="p-3 bg-emerald-100 dark:bg-emerald-950/50 rounded-xl text-emerald-600 dark:text-emerald-400">
               <FileText className="w-5 h-5" />
@@ -883,9 +883,9 @@ export default function AdminPage() {
 
         {/* TAB 1: KNOWLEDGE BASE CONTROLLER */}
         {activeTab === 'docs' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-6rem)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
             {/* Form Ingestion (Kiri) */}
-            <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col h-full overflow-y-auto">
+            <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col h-full">
               <div className="flex items-center gap-2 mb-6">
                 <Upload className="w-5 h-5 text-emerald-600" />
                 <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Upload Teks Rujukan</h2>
@@ -1079,8 +1079,8 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
-                <table className="w-full text-left border-collapse">
+              <div className="flex-1 overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[550px]">
                   <thead>
                     <tr className="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 text-xs font-bold uppercase text-zinc-400">
                       <th className="px-6 py-3.5">Judul Buku / Bab</th>
@@ -1112,9 +1112,9 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 2: AI PROMPT EDITOR & PLAYGROUND */}
+        {/* TAB 2: SYSTEM PROMPT & PLAYGROUND */}
         {activeTab === 'playground' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-6rem)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[500px]">
             {/* Prompt Editor (Kiri) */}
             <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col h-full overflow-y-auto">
               <div className="flex items-center gap-2 mb-2">
@@ -1351,7 +1351,7 @@ export default function AdminPage() {
 
         {/* TAB 3: USER MANAGER & LIVE INTERVENTION */}
         {activeTab === 'users' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-6rem)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px] lg:h-[650px]">
             {/* User List Panel (Kiri) */}
             <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex-col h-full overflow-hidden`}>
               <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
@@ -1518,7 +1518,7 @@ export default function AdminPage() {
 
         {/* TAB 4: USER DETAILS & INBODY LOGS PROGRESS */}
         {activeTab === 'details' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100%-6rem)] overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[600px] lg:h-[650px]">
             {/* User List Panel (Kiri) */}
             <div className={`${selectedUser ? 'hidden lg:flex' : 'flex'} lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex-col h-full overflow-hidden`}>
               <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
