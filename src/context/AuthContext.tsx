@@ -14,6 +14,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, role: 'admin' | 'user', name: string) => void; // fallback setter
   logout: () => Promise<void>;
+  updateProfileName: (newName: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,6 +75,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const updateProfileName = (newName: string) => {
+    setUser((prev) => (prev ? { ...prev, name: newName } : null));
+    const savedUser = localStorage.getItem('gk_user_session');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        localStorage.setItem('gk_user_session', JSON.stringify({ ...parsed, name: newName }));
+      } catch (e) {}
+    }
+  };
+
   const login = (email: string, role: 'admin' | 'user', name: string) => {
     const newUser: User = { email, role, name };
     setUser(newUser);
@@ -92,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateProfileName }}>
       {children}
     </AuthContext.Provider>
   );

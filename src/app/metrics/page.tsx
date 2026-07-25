@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProgressChart from '@/components/metrics/ProgressChart';
 import { supabase } from '@/lib/supabase';
+import EditProfileModal from '@/components/profile/EditProfileModal';
 import {
   TrendingUp,
   MessageSquare,
@@ -12,6 +13,7 @@ import {
   LogOut,
   Bot,
   User as UserIcon,
+  User,
   Plus,
   Trash2,
   Calendar,
@@ -85,6 +87,7 @@ export default function MetricsPage() {
   const { user, loading, logout } = useAuth();
   const [authorized, setAuthorized] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   
   // Data states
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -522,12 +525,19 @@ export default function MetricsPage() {
           </div>
         </div>
 
-        <div className="p-4 mx-4 my-6 bg-zinc-800/50 rounded-2xl border border-zinc-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-white uppercase">
+        <div 
+          onClick={() => setShowProfileModal(true)}
+          className="p-4 mx-4 my-6 bg-zinc-800/50 hover:bg-zinc-800/80 rounded-2xl border border-zinc-800 flex items-center gap-3 cursor-pointer transition-all group"
+          title="Klik untuk ubah profil"
+        >
+          <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-white uppercase flex-shrink-0 group-hover:scale-105 transition-transform">
             {user?.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{user?.name}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold truncate group-hover:text-emerald-400 transition-colors">{user?.name}</p>
+              <User className="w-3.5 h-3.5 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+            </div>
             <p className="text-xs text-zinc-400 truncate">{user?.email}</p>
           </div>
         </div>
@@ -591,12 +601,22 @@ export default function MetricsPage() {
             </div>
 
             {/* User Card */}
-            <div className="p-4 mx-4 my-6 bg-zinc-800/50 rounded-2xl border border-zinc-800 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-white uppercase">
+            <div 
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setShowProfileModal(true);
+              }}
+              className="p-4 mx-4 my-6 bg-zinc-800/50 hover:bg-zinc-800/80 rounded-2xl border border-zinc-800 flex items-center gap-3 cursor-pointer transition-all group"
+              title="Klik untuk ubah profil"
+            >
+              <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-white uppercase flex-shrink-0 group-hover:scale-105 transition-transform">
                 {user?.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{user?.name}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold truncate group-hover:text-emerald-400 transition-colors">{user?.name}</p>
+                  <User className="w-3.5 h-3.5 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+                </div>
                 <p className="text-xs text-zinc-400 truncate">{user?.email}</p>
               </div>
             </div>
@@ -1033,6 +1053,12 @@ export default function MetricsPage() {
 
         </div>
       </main>
+
+      {/* Modal Edit Profil */}
+      <EditProfileModal 
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
+      />
 
     </div>
   );
