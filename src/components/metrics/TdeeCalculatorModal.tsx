@@ -48,6 +48,16 @@ export default function TdeeCalculatorModal({ isOpen, onClose, onApplyTarget }: 
           if (profile.height_cm) setHeightCm(String(profile.height_cm));
           if (profile.goal_type) setGoalType(profile.goal_type);
           if (profile.activity_level) setActivityLevel(profile.activity_level);
+          if (profile.date_of_birth) {
+            const birth = new Date(profile.date_of_birth);
+            const today = new Date();
+            let calculatedAge = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+              calculatedAge--;
+            }
+            setAge(String(Math.max(10, calculatedAge)));
+          }
         }
 
         // Fetch latest weight from progress_logs

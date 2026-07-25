@@ -13,6 +13,7 @@ interface EditProfileModalProps {
 export default function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
   const { user, updateProfileName } = useAuth();
   const [fullName, setFullName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('2000-01-01');
   const [gender, setGender] = useState('pria');
   const [heightCm, setHeightCm] = useState('175');
   const [goalType, setGoalType] = useState('fat_loss');
@@ -43,6 +44,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
         if (!error && data) {
           if (data.full_name) setFullName(data.full_name);
+          if (data.date_of_birth) setDateOfBirth(data.date_of_birth);
           if (data.gender) setGender(data.gender);
           if (data.height_cm) setHeightCm(String(data.height_cm));
           if (data.goal_type) setGoalType(data.goal_type);
@@ -74,6 +76,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
           .upsert({
             id: userId,
             full_name: fullName,
+            date_of_birth: dateOfBirth,
             gender,
             height_cm: parseFloat(heightCm) || 175,
             goal_type: goalType,
@@ -141,6 +144,17 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
               value={fullName} 
               onChange={e => setFullName(e.target.value)} 
               placeholder="Nama Anda..." 
+              className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Tanggal Lahir</label>
+            <input 
+              type="date" 
+              required 
+              value={dateOfBirth} 
+              onChange={e => setDateOfBirth(e.target.value)} 
               className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
             />
           </div>
