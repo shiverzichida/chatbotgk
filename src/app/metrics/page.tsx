@@ -26,8 +26,11 @@ import {
   Activity,
   X,
   FileText,
-  Menu
+  Menu,
+  Utensils,
+  Calculator
 } from 'lucide-react';
+import TdeeCalculatorModal from '@/components/metrics/TdeeCalculatorModal';
 
 interface LogEntry {
   id: string;
@@ -74,6 +77,18 @@ interface WeeklyReview {
   coach_notes?: string;
 }
 
+interface FoodLog {
+  id: string;
+  user_id?: string;
+  date: string;
+  meal_type: 'sarapan' | 'makan_siang' | 'makan_malam' | 'snack';
+  food_name: string;
+  calories: number;
+  protein: number;
+  carbs?: number;
+  fat?: number;
+}
+
 // Data awal (Dummy InBody History selama 2 minggu)
 const initialDummyData: LogEntry[] = [
   { id: '1', date: '2026-07-10', weight: 78.5, muscle: 32.1, fat: 21.3, calories: 2100, protein: 140 },
@@ -94,6 +109,17 @@ export default function MetricsPage() {
   const [activeTarget, setActiveTarget] = useState<UserTarget | null>(null);
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
   const [weeklyReviews, setWeeklyReviews] = useState<WeeklyReview[]>([]);
+  const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
+
+  // TDEE & Food Logger states
+  const [showTdeeModal, setShowTdeeModal] = useState(false);
+  const [foodForm, setFoodForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    mealType: 'makan_siang' as 'sarapan' | 'makan_siang' | 'makan_malam' | 'snack',
+    foodName: '',
+    calories: '',
+    protein: ''
+  });
   
   // Form inputs for InBody
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -208,6 +234,25 @@ export default function MetricsPage() {
           .eq('user_id', userId)
           .order('start_date', { ascending: false });
         if (reviewsData) setWeeklyReviews(reviewsData);
+
+        // Fetch Food Logs (today)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { data: foodData, error: foodErr } = await supabase
+          .from('food_logs')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', todayStr)
+          .order('created_at', { ascending: true });
+
+        if (!foodErr && foodData) {
+          setFoodLogs(foodData);
+          localStorage.setItem(`gk_food_logs_${todayStr}`, JSON.stringify(foodData));
+        } else {
+          const fallbackFood = localStorage.getItem(`gk_food_logs_${todayStr}`);
+          if (fallbackFood) {
+            try { setFoodLogs(JSON.parse(fallbackFood)); } catch (e) {}
+          }
+        }
 
       } catch (err) {
         console.warn('Error fetching some data:', err);
@@ -439,6 +484,80 @@ export default function MetricsPage() {
       notes: ''
     });
   };
+
+  const handleFoodSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!foodForm.foodName.trim() || !foodForm.calories) return;
+
+    const calVal = parseInt(foodForm.calories) || 0;
+    const protVal = parseInt(foodForm.protein) || 0;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) return;
+
+      const newFood = {
+        user_id: userId,
+        date: foodForm.date,
+        meal_type: foodForm.mealType,
+        food_name: foodForm.foodName.trim(),
+        calories: calVal,
+        protein: protVal
+      };
+
+      const { data, error } = await supabase
+        .from('food_logs')
+        .insert(newFood)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const updated = [...foodLogs, data];
+        setFoodLogs(updated);
+        localStorage.setItem(`gk_food_logs_${foodForm.date}`, JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.warn('Gagal menyimpan log makanan ke Supabase. Menggunakan fallback lokal:', err);
+      const fallbackEntry: FoodLog = {
+        id: String(Date.now()),
+        date: foodForm.date,
+        meal_type: foodForm.mealType,
+        food_name: foodForm.foodName.trim(),
+        calories: calVal,
+        protein: protVal
+      };
+      const updated = [...foodLogs, fallbackEntry];
+      setFoodLogs(updated);
+      localStorage.setItem(`gk_food_logs_${foodForm.date}`, JSON.stringify(updated));
+    }
+
+    setFoodForm(prev => ({
+      ...prev,
+      foodName: '',
+      calories: '',
+      protein: ''
+    }));
+  };
+
+  const handleDeleteFood = async (id: string) => {
+    try {
+      if (id.length === 36) {
+        await supabase.from('food_logs').delete().eq('id', id);
+      }
+    } catch (err) {}
+    const updated = foodLogs.filter(f => f.id !== id);
+    setFoodLogs(updated);
+    const todayStr = new Date().toISOString().split('T')[0];
+    localStorage.setItem(`gk_food_logs_${todayStr}`, JSON.stringify(updated));
+  };
+
+  const todayCaloriesConsumed = foodLogs.reduce((acc, f) => acc + (f.calories || 0), 0);
+  const todayProteinConsumed = foodLogs.reduce((acc, f) => acc + (f.protein || 0), 0);
+  const dailyCaloriesTarget = activeTarget?.daily_calories_target || 2000;
+  const dailyProteinTarget = activeTarget?.daily_protein_target || 140;
 
   if (loading) {
     return (
@@ -761,6 +880,227 @@ export default function MetricsPage() {
             )}
           </section>
 
+          {/* Section: Daily Macro Tracker & Food Logger */}
+          <section className="space-y-6">
+            {/* Header / Banner */}
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                    <Utensils className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Log Nutrisi & Makanan Hari Ini</h3>
+                    <p className="text-xs text-zinc-400">Pantau Asupan Kalori & Protein Harian Anda</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTdeeModal(true)}
+                  className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-100 transition-all flex items-center justify-center gap-2"
+                >
+                  <Calculator className="w-4 h-4" />
+                  <span>Kalkulator TDEE & Makro</span>
+                </button>
+              </div>
+
+              {/* Progress Bars (Kalori & Protein) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Kalori Progress */}
+                <div className="bg-zinc-50 dark:bg-zinc-950 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase text-zinc-400">Asupan Kalori Hari Ini</p>
+                      <h4 className="text-2xl font-black text-zinc-900 dark:text-zinc-50 mt-0.5">
+                        {todayCaloriesConsumed} <span className="text-xs font-normal text-zinc-400">/ {dailyCaloriesTarget} kcal</span>
+                      </h4>
+                    </div>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      todayCaloriesConsumed <= dailyCaloriesTarget
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400'
+                    }`}>
+                      {todayCaloriesConsumed <= dailyCaloriesTarget
+                        ? `Sisa ${dailyCaloriesTarget - todayCaloriesConsumed} kcal`
+                        : `Surplus +${todayCaloriesConsumed - dailyCaloriesTarget} kcal`}
+                    </span>
+                  </div>
+                  <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        todayCaloriesConsumed <= dailyCaloriesTarget ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.round((todayCaloriesConsumed / (dailyCaloriesTarget || 1)) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Protein Progress */}
+                <div className="bg-zinc-50 dark:bg-zinc-950 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase text-zinc-400">Asupan Protein Hari Ini</p>
+                      <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        {todayProteinConsumed} <span className="text-xs font-normal text-zinc-400">/ {dailyProteinTarget} gram</span>
+                      </h4>
+                    </div>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      todayProteinConsumed >= dailyProteinTarget
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400'
+                        : 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-400'
+                    }`}>
+                      {todayProteinConsumed >= dailyProteinTarget
+                        ? 'Target Protein Tercapai 🎉'
+                        : `Kurang ${dailyProteinTarget - todayProteinConsumed} g`}
+                    </span>
+                  </div>
+                  <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.round((todayProteinConsumed / (dailyProteinTarget || 1)) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Food Form & Today's Meals List */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Form Input Makanan */}
+              <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
+                <div className="flex items-center gap-2 mb-4">
+                  <Plus className="w-5 h-5 text-emerald-600" />
+                  <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Catat Asupan Makan</h4>
+                </div>
+                <form onSubmit={handleFoodSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1">Tanggal</label>
+                    <input 
+                      type="date" 
+                      required 
+                      value={foodForm.date} 
+                      onChange={e => setFoodForm({ ...foodForm, date: e.target.value })}
+                      className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1">Waktu Makan</label>
+                    <select 
+                      value={foodForm.mealType} 
+                      onChange={e => setFoodForm({ ...foodForm, mealType: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 capitalize"
+                    >
+                      <option value="sarapan">🌅 Sarapan</option>
+                      <option value="makan_siang">☀️ Makan Siang</option>
+                      <option value="makan_malam">🌙 Makan Malam</option>
+                      <option value="snack">🍿 Snack / Camilan</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-zinc-500 mb-1">Nama Makanan & Porsi</label>
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder="Contoh: Dada Ayam 150g & Nasi Merah" 
+                      value={foodForm.foodName} 
+                      onChange={e => setFoodForm({ ...foodForm, foodName: e.target.value })}
+                      className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-zinc-400 mb-1">Kalori (kcal)</label>
+                      <input 
+                        type="number" 
+                        required 
+                        placeholder="350" 
+                        value={foodForm.calories} 
+                        onChange={e => setFoodForm({ ...foodForm, calories: e.target.value })}
+                        className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-zinc-400 mb-1">Protein (gram)</label>
+                      <input 
+                        type="number" 
+                        placeholder="30" 
+                        value={foodForm.protein} 
+                        onChange={e => setFoodForm({ ...foodForm, protein: e.target.value })}
+                        className="w-full px-3 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm transition-all shadow-md mt-2 flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Tambahkan Makanan</span>
+                  </button>
+                </form>
+              </div>
+
+              {/* List Makanan Hari Ini */}
+              <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Daftar Makanan Terkonsumsi Hari Ini</h4>
+                    <span className="text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full text-zinc-500">
+                      {foodLogs.length} Menu
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                    {foodLogs.length > 0 ? (
+                      foodLogs.map((item) => (
+                        <div 
+                          key={item.id} 
+                          className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/40 flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">
+                              {item.meal_type === 'sarapan' ? '🌅' : item.meal_type === 'makan_siang' ? '☀️' : item.meal_type === 'makan_malam' ? '🌙' : '🍿'}
+                            </span>
+                            <div>
+                              <h5 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 capitalize">{item.food_name}</h5>
+                              <p className="text-[10px] text-zinc-400 capitalize">
+                                {item.meal_type.replace('_', ' ')} • <span className="font-semibold text-emerald-600 dark:text-emerald-400">{item.protein || 0}g protein</span>
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black text-zinc-800 dark:text-zinc-200">
+                              {item.calories} kcal
+                            </span>
+                            <button 
+                              onClick={() => handleDeleteFood(item.id)}
+                              className="text-zinc-400 hover:text-red-500 p-1 transition-colors"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-12 text-center text-zinc-400">
+                        <Utensils className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                        <p className="text-xs">Belum ada makanan yang dicatat hari ini.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center text-xs text-zinc-500">
+                  <span>Total Hari Ini:</span>
+                  <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                    {todayCaloriesConsumed} kcal / {todayProteinConsumed}g protein
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Section: Daily Workout Logger */}
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
@@ -1058,6 +1398,21 @@ export default function MetricsPage() {
       <EditProfileModal 
         isOpen={showProfileModal} 
         onClose={() => setShowProfileModal(false)} 
+      />
+
+      {/* Modal Kalkulator TDEE */}
+      <TdeeCalculatorModal
+        isOpen={showTdeeModal}
+        onClose={() => setShowTdeeModal(false)}
+        onApplyTarget={(cal, prot) => {
+          if (activeTarget) {
+            setActiveTarget({
+              ...activeTarget,
+              daily_calories_target: cal,
+              daily_protein_target: prot
+            });
+          }
+        }}
       />
 
     </div>
