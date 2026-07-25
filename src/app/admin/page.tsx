@@ -23,7 +23,8 @@ import {
   HelpCircle,
   TrendingUp,
   RefreshCw,
-  Award
+  Award,
+  Utensils
 } from 'lucide-react';
 
 interface UserProfile {
@@ -58,6 +59,7 @@ export default function AdminPage() {
   const [userLogs, setUserLogs] = useState<any[]>([]);
   const [userTargets, setUserTargets] = useState<any[]>([]);
   const [userWorkouts, setUserWorkouts] = useState<any[]>([]);
+  const [userFoodLogs, setUserFoodLogs] = useState<any[]>([]);
   const [userReviews, setUserReviews] = useState<any[]>([]);
   const [isLogsLoading, setIsLogsLoading] = useState(false);
 
@@ -308,6 +310,7 @@ export default function AdminPage() {
 
         if (data.targets) setUserTargets(data.targets);
         if (data.workouts) setUserWorkouts(data.workouts);
+        if (data.foodLogs) setUserFoodLogs(data.foodLogs);
         if (data.reviews) {
           setUserReviews(data.reviews);
           const today = new Date();
@@ -1726,6 +1729,43 @@ export default function AdminPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Food Logs Section */}
+                  <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                        <Utensils className="w-4 h-4 text-emerald-600" />
+                        Riwayat Asupan Makanan User
+                      </h4>
+                      <span className="text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 px-2.5 py-0.5 rounded-full text-zinc-500">
+                        {userFoodLogs.length} Menu Terdaftar
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {userFoodLogs && userFoodLogs.length > 0 ? (
+                        userFoodLogs.map((food: any) => (
+                          <div key={food.id} className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-base">
+                                {food.meal_type === 'sarapan' ? '🌅' : food.meal_type === 'makan_siang' ? '☀️' : food.meal_type === 'makan_malam' ? '🌙' : '🍿'}
+                              </span>
+                              <div>
+                                <h5 className="font-bold text-zinc-900 dark:text-zinc-100 capitalize">{food.food_name}</h5>
+                                <p className="text-[10px] text-zinc-400 capitalize">{food.date} • {food.meal_type?.replace('_', ' ')}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-zinc-800 dark:text-zinc-200">{food.calories} kcal</p>
+                              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{food.protein}g protein</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-zinc-400 py-4 text-center">Belum ada catatan asupan makanan dari user ini.</p>
+                      )}
+                    </div>
+                  </div>
 
                   {/* Review Creator */}
                   <div className="bg-white dark:bg-zinc-950 rounded-xl border border-emerald-200 dark:border-emerald-900/50 overflow-hidden shadow-sm">

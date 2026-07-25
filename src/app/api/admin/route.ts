@@ -172,11 +172,20 @@ export async function GET(req: NextRequest) {
 
       if (logsError) throw logsError;
 
+      // Ambil food logs
+      const { data: foodLogs } = await adminClient
+        .from('food_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false })
+        .limit(50);
+
       return NextResponse.json({ 
         targets: targets || [],
         workouts: workouts || [],
         reviews: reviews || [],
-        logs: logs || []
+        logs: logs || [],
+        foodLogs: foodLogs || []
       });
     }
 
