@@ -84,6 +84,7 @@ export default function AdminPage() {
   const [uploadMethod, setUploadMethod] = useState<'text' | 'pdf'>('text');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfChapter, setPdfChapter] = useState('');
+  const [pdfType, setPdfType] = useState('Nutrition Guideline');
   
   useEffect(() => {
     setIsLocalhost(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -528,6 +529,7 @@ export default function AdminPage() {
       formData.append('action', 'upload_pdf');
       formData.append('file', pdfFile);
       formData.append('chapter', pdfChapter);
+      formData.append('type', pdfType);
 
       const res = await fetch('/api/admin', {
         method: 'POST',
@@ -545,7 +547,7 @@ export default function AdminPage() {
       const newDoc = {
         id: String(Date.now()),
         title: pdfChapter || pdfFile.name,
-        type: 'Nutrition Guideline',
+        type: pdfType,
         size: `${(pdfFile.size / 1024).toFixed(1)} KB`,
         status: 'processed',
         date: new Date().toISOString().split('T')[0]
@@ -1001,6 +1003,18 @@ export default function AdminPage() {
                           onChange={(e) => setPdfChapter(e.target.value)}
                           className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase text-zinc-400 mb-2">Kategori</label>
+                        <select
+                          value={pdfType}
+                          onChange={(e) => setPdfType(e.target.value)}
+                          className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option>Nutrition Guideline</option>
+                          <option>Meal Plan</option>
+                          <option>Fitness Protocol</option>
+                        </select>
                       </div>
                     </div>
                     <div className="pt-4 mt-auto">
