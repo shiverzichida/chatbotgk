@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProgressChart from '@/components/metrics/ProgressChart';
 import { supabase } from '@/lib/supabase';
@@ -533,19 +534,19 @@ export default function MetricsPage() {
 
         <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
           <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
-          <a href="/chat" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+          <Link href="/chat" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <MessageSquare className="w-4 h-4" />
             <span>Chatbot AI</span>
-          </a>
-          <a href="/metrics" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
+          </Link>
+          <Link href="/metrics" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
             <span>Log Metrik & Gizi</span>
-          </a>
+          </Link>
           {user?.role === 'admin' && (
-            <a href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
               <BookOpen className="w-4 h-4 text-emerald-500" />
               <span>Knowledge Base</span>
-            </a>
+            </Link>
           )}
         </nav>
 
@@ -603,29 +604,31 @@ export default function MetricsPage() {
             {/* Navigation Links */}
             <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
               <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
-              <a 
+              <Link 
                 href="/chat" 
+                onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Chatbot AI</span>
-              </a>
-              <a 
+              </Link>
+              <Link 
                 href="/metrics" 
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors"
               >
                 <TrendingUp className="w-4 h-4 text-emerald-500" />
                 <span>Log Metrik & Gizi</span>
-              </a>
+              </Link>
               {user?.role === 'admin' && (
-                <a 
+                <Link 
                   href="/admin" 
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
                 >
                   <BookOpen className="w-4 h-4 text-emerald-500" />
                   <span>Knowledge Base</span>
-                </a>
+                </Link>
               )}
             </nav>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -305,19 +306,19 @@ export default function ChatPage() {
         {/* Navigation / Sessions */}
         <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
           <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
+          <Link href="/chat" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
             <MessageSquare className="w-4 h-4 text-emerald-500" />
             <span>Chatbot AI</span>
-          </a>
-          <a href="/metrics" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+          </Link>
+          <Link href="/metrics" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <TrendingUp className="w-4 h-4" />
             <span>Log Metrik & Gizi</span>
-          </a>
+          </Link>
           {user?.role === 'admin' && (
-            <a href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
               <BookOpen className="w-4 h-4 text-emerald-500" />
               <span>Knowledge Base</span>
-            </a>
+            </Link>
           )}
         </nav>
 
@@ -376,29 +377,31 @@ export default function ChatPage() {
             {/* Navigation Links */}
             <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
               <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
-              <a 
-                href="#" 
+              <Link 
+                href="/chat" 
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors"
               >
                 <MessageSquare className="w-4 h-4 text-emerald-500" />
                 <span>Chatbot AI</span>
-              </a>
-              <a 
+              </Link>
+              <Link 
                 href="/metrics" 
+                onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
               >
                 <TrendingUp className="w-4 h-4" />
                 <span>Log Metrik & Gizi</span>
-              </a>
+              </Link>
               {user?.role === 'admin' && (
-                <a 
+                <Link 
                   href="/admin" 
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
                 >
                   <BookOpen className="w-4 h-4 text-emerald-500" />
                   <span>Knowledge Base</span>
-                </a>
+                </Link>
               )}
             </nav>
 
@@ -442,13 +445,13 @@ export default function ChatPage() {
               <span>Reset Chat</span>
             </button>
             {user?.role === 'admin' && (
-              <a 
+              <Link 
                 href="/admin" 
                 className="text-xs font-semibold px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-center gap-1 hover:bg-emerald-100 transition-colors"
               >
                 <span>Console Admin</span>
                 <ChevronRight className="w-3.5 h-3.5" />
-              </a>
+              </Link>
             )}
           </div>
         </header>

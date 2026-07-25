@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import ProgressChart from '@/components/metrics/ProgressChart';
@@ -763,6 +764,13 @@ export default function AdminPage() {
                 Coach
               </span>
             </div>
+            <Link
+              href="/chat"
+              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-250 dark:border-emerald-900/50 hover:bg-emerald-100/70 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-450 transition-colors"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Kembali ke Chat</span>
+            </Link>
             <button 
               onClick={logout}
               className="flex items-center gap-2 px-3 py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-xs font-semibold text-zinc-500 hover:text-red-650 transition-colors"
