@@ -18,7 +18,8 @@ import {
   Loader2,
   Trash2,
   Menu,
-  X
+  X,
+  Calculator
 } from 'lucide-react';
 
 export default function ChatPage() {
@@ -324,6 +325,10 @@ export default function ChatPage() {
             <TrendingUp className="w-4 h-4" />
             <span>Log Metrik & Gizi</span>
           </Link>
+          <Link href="/calculator" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Calculator className="w-4 h-4 text-emerald-500" />
+            <span>Kalkulator TDEE & Makro</span>
+          </Link>
           {user?.role === 'admin' && (
             <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
               <BookOpen className="w-4 h-4 text-emerald-500" />
@@ -412,6 +417,14 @@ export default function ChatPage() {
               >
                 <TrendingUp className="w-4 h-4" />
                 <span>Log Metrik & Gizi</span>
+              </Link>
+              <Link 
+                href="/calculator" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
+              >
+                <Calculator className="w-4 h-4 text-emerald-500" />
+                <span>Kalkulator TDEE & Makro</span>
               </Link>
               {user?.role === 'admin' && (
                 <Link 
