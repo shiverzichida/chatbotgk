@@ -22,7 +22,8 @@ import {
   Dumbbell,
   Activity,
   X,
-  FileText
+  FileText,
+  Menu
 } from 'lucide-react';
 
 interface LogEntry {
@@ -82,6 +83,7 @@ const initialDummyData: LogEntry[] = [
 export default function MetricsPage() {
   const { user, loading, logout } = useAuth();
   const [authorized, setAuthorized] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Data states
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -558,13 +560,100 @@ export default function MetricsPage() {
         </div>
       </aside>
 
+      {/* Mobile Sidebar Menu Drawer */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop overlay */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          {/* Sidebar content drawer */}
+          <aside className="absolute inset-y-0 left-0 w-80 bg-zinc-900 text-zinc-100 flex flex-col shadow-2xl border-r border-zinc-800 animate-slide-in z-10">
+            {/* Drawer Header */}
+            <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-600 p-2 rounded-xl text-white">
+                  <Bot className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-sm font-bold tracking-tight">Gizi Kebugaran</h1>
+                  <p className="text-[10px] text-emerald-500 font-medium">Gizi Kebugaran AI</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* User Card */}
+            <div className="p-4 mx-4 my-6 bg-zinc-800/50 rounded-2xl border border-zinc-800 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-white uppercase">
+                {user?.name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">{user?.name}</p>
+                <p className="text-xs text-zinc-400 truncate">{user?.email}</p>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
+              <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
+              <a 
+                href="/chat" 
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Chatbot AI</span>
+              </a>
+              <a 
+                href="/metrics" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors"
+              >
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span>Log Metrik & Gizi</span>
+              </a>
+              {user?.role === 'admin' && (
+                <a 
+                  href="/admin" 
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors"
+                >
+                  <BookOpen className="w-4 h-4 text-emerald-500" />
+                  <span>Knowledge Base</span>
+                </a>
+              )}
+            </nav>
+
+            {/* Footer Logout */}
+            <div className="p-4 border-t border-zinc-800">
+              <button 
+                onClick={logout}
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-zinc-800 hover:bg-red-950/30 hover:text-red-400 text-zinc-400 border border-zinc-800 rounded-xl text-sm font-semibold transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Main Workspace */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto relative">
         <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 h-16 flex items-center justify-between px-6 flex-shrink-0 z-10 sticky top-0">
           <div className="flex items-center gap-3">
-            <div className="md:hidden bg-emerald-600 p-1.5 rounded-lg text-white">
-              <Bot className="w-5 h-5" />
-            </div>
+            {/* Hamburger Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden bg-emerald-600 hover:bg-emerald-700 p-2 rounded-xl text-white transition-all active:scale-95 flex items-center justify-center"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             <div>
               <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Log Metrik Komposisi Tubuh</h2>
               <p className="text-xs text-zinc-400">Analisis Komposisi Otot & Lemak ala InBody</p>
