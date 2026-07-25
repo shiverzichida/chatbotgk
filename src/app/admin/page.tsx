@@ -752,9 +752,7 @@ export default function AdminPage() {
       <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-emerald-600 p-2 rounded-xl text-white">
-              <Database className="w-6 h-6 animate-pulse" />
-            </div>
+            <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
             <div>
               <h1 className="text-sm font-bold text-zinc-900 dark:text-zinc-50 tracking-tight flex items-center gap-2">
                 <span>Console Admin Gizi Kebugaran</span>

@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nutrition by Gizi Kebugaran",
   description: "Chatbot Gizi Kebugaran - Personal Nutrition & Fitness Assistant",
+  icons: {
+    icon: "/logo-gk.jpg",
+    shortcut: "/logo-gk.jpg",
+    apple: "/logo-gk.jpg",
+  },
 };
 
 export default function RootLayout({

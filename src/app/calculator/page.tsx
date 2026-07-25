@@ -232,9 +232,7 @@ export default function CalculatorPage() {
       {/* Sidebar Navigation - Desktop */}
       <aside className="w-64 bg-zinc-900 text-zinc-100 flex flex-col hidden md:flex border-r border-zinc-800 flex-shrink-0">
         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
-          <div className="bg-emerald-600 p-2 rounded-xl text-white">
-            <Bot className="w-6 h-6" />
-          </div>
+          <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
           <div>
             <h1 className="text-sm font-bold tracking-tight">Gizi Kebugaran</h1>
             <p className="text-xs text-emerald-500 font-medium">Gizi Kebugaran AI</p>

@@ -187,9 +187,7 @@ export default function WorkoutLogPage() {
       {/* Desktop Sidebar */}
       <aside className="w-64 bg-zinc-900 text-zinc-100 flex flex-col hidden md:flex border-r border-zinc-800 flex-shrink-0">
         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
-          <div className="bg-emerald-600 p-2 rounded-xl text-white">
-            <Bot className="w-6 h-6" />
-          </div>
+          <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
           <div>
             <h1 className="text-sm font-bold tracking-tight">Gizi Kebugaran</h1>
             <p className="text-xs text-emerald-500 font-medium">Gizi Kebugaran AI</p>
@@ -261,7 +259,7 @@ export default function WorkoutLogPage() {
           <aside className="absolute inset-y-0 left-0 w-80 bg-zinc-900 text-zinc-100 flex flex-col shadow-2xl border-r border-zinc-800 z-10">
             <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-emerald-600 p-2 rounded-xl text-white"><Bot className="w-5 h-5" /></div>
+                <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
                 <div><h1 className="text-sm font-bold">Gizi Kebugaran</h1><p className="text-[10px] text-emerald-500">Gizi Kebugaran AI</p></div>
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 bg-zinc-800 text-zinc-400 rounded-lg"><X className="w-4 h-4" /></button>
