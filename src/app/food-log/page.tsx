@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import EditProfileModal from '@/components/profile/EditProfileModal';
+import { HealthyMeal, HEALTHY_MEALS_DATABASE, getRecommendedMeals } from '@/lib/healthyMealsData';
 import {
   Utensils,
   TrendingUp,
@@ -21,7 +22,11 @@ import {
   Loader2,
   X,
   Menu,
-  Dumbbell
+  Dumbbell,
+  Sparkles,
+  Lightbulb,
+  CheckCircle2,
+  ChefHat
 } from 'lucide-react';
 
 interface FoodLog {
@@ -182,10 +187,111 @@ export default function FoodLogPage() {
     localStorage.setItem(`gk_food_logs_${foodForm.date}`, JSON.stringify(updated));
   };
 
+  // Recommendation Engine States & Handlers
+  const [recommendationCategory, setRecommendationCategory] = useState<'all' | 'high_protein' | 'low_calorie' | 'healthy_snack'>('all');
+  const [addedMealId, setAddedMealId] = useState<string | null>(null);
+
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiRecipeResult, setAiRecipeResult] = useState<string | null>(null);
+
   const todayCaloriesConsumed = foodLogs.reduce((acc, f) => acc + (f.calories || 0), 0);
   const todayProteinConsumed = foodLogs.reduce((acc, f) => acc + (f.protein || 0), 0);
   const dailyCaloriesTarget = activeTarget?.daily_calories_target || 2000;
   const dailyProteinTarget = activeTarget?.daily_protein_target || 140;
+
+  const remainingCalories = Math.max(0, dailyCaloriesTarget - todayCaloriesConsumed);
+  const remainingProtein = Math.max(0, dailyProteinTarget - todayProteinConsumed);
+
+  const recommendedMeals = getRecommendedMeals(remainingCalories, remainingProtein, recommendationCategory);
+
+  const handleQuickAddMeal = async (meal: HealthyMeal) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) return;
+
+      const newFood = {
+        user_id: userId,
+        date: foodForm.date,
+        meal_type: meal.mealType,
+        food_name: meal.name,
+        calories: meal.calories,
+        protein: meal.protein
+      };
+
+      const { data, error } = await supabase
+        .from('food_logs')
+        .insert(newFood)
+        .select()
+        .single();
+
+      if (!error && data) {
+        const updated = [...foodLogs, data];
+        setFoodLogs(updated);
+        localStorage.setItem(`gk_food_logs_${foodForm.date}`, JSON.stringify(updated));
+      } else {
+        const fallbackEntry: FoodLog = {
+          id: String(Date.now()),
+          date: foodForm.date,
+          meal_type: meal.mealType,
+          food_name: meal.name,
+          calories: meal.calories,
+          protein: meal.protein
+        };
+        const updated = [...foodLogs, fallbackEntry];
+        setFoodLogs(updated);
+        localStorage.setItem(`gk_food_logs_${foodForm.date}`, JSON.stringify(updated));
+      }
+    } catch (err) {
+      const fallbackEntry: FoodLog = {
+        id: String(Date.now()),
+        date: foodForm.date,
+        meal_type: meal.mealType,
+        food_name: meal.name,
+        calories: meal.calories,
+        protein: meal.protein
+      };
+      const updated = [...foodLogs, fallbackEntry];
+      setFoodLogs(updated);
+      localStorage.setItem(`gk_food_logs_${foodForm.date}`, JSON.stringify(updated));
+    }
+
+    setAddedMealId(meal.id);
+    setTimeout(() => setAddedMealId(null), 2500);
+  };
+
+  const handleAskAiRecipe = async () => {
+    setShowAiModal(true);
+    setIsAiLoading(true);
+    setAiRecipeResult(null);
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'user',
+              content: `Sisa kuota kalori saya hari ini adalah ${remainingCalories} kcal dan sisa protein ${remainingProtein}g. Tolong rekomendasikan 2 ide masakan lokal Indonesia yang sehat, tinggi protein, praktis dimasak, lengkap dengan porsi kalori dan proteinnya.`
+            }
+          ]
+        })
+      });
+
+      const data = await res.json();
+      if (data && data.text) {
+        setAiRecipeResult(data.text);
+      } else {
+        setAiRecipeResult('Gagal mendapatkan resep AI. Silakan coba lagi.');
+      }
+    } catch (err) {
+      setAiRecipeResult('Terjadi kendala koneksi saat meminta rekomendasi resep AI.');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   if (loading || !authorized) {
     return (
@@ -391,6 +497,135 @@ export default function FoodLogPage() {
             </div>
           </div>
 
+          {/* Section: Smart Meal & Recipe Recommendation Engine */}
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
+                  <Lightbulb className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                    <span>Rekomendasi Makanan Sehat Khas Indonesia</span>
+                    <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">
+                      Pas Sisa Kuota
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400">Sisa Kuota Hari Ini: <span className="font-bold text-zinc-700 dark:text-zinc-300">{remainingCalories} kcal</span> • <span className="font-bold text-emerald-600 dark:text-emerald-400">{remainingProtein}g protein</span></p>
+                </div>
+              </div>
+
+              {/* Filter Tabs & AI Button */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setRecommendationCategory('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    recommendationCategory === 'all'
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  Semua
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setRecommendationCategory('high_protein')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    recommendationCategory === 'high_protein'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  🥩 Tinggi Protein
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setRecommendationCategory('healthy_snack')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    recommendationCategory === 'healthy_snack'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  🍿 Camilan Sehat
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleAskAiRecipe}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 active:scale-95 ml-auto"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Saran AI</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Recommendation Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recommendedMeals.length > 0 ? (
+                recommendedMeals.slice(0, 6).map((meal) => (
+                  <div 
+                    key={meal.id} 
+                    className="bg-zinc-50/70 dark:bg-zinc-950/40 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between space-y-3 hover:border-emerald-500/50 transition-all group"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl group-hover:scale-110 transition-transform">{meal.iconEmoji}</span>
+                          <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug">{meal.name}</h4>
+                        </div>
+                        <span className="text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-md flex-shrink-0">
+                          {meal.calories} kcal
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+                        {meal.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-[10px] text-zinc-400 pt-1">
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md">
+                          {meal.protein}g Protein
+                        </span>
+                        <span>•</span>
+                        <span>{meal.carbs}g Karbo</span>
+                        <span>•</span>
+                        <span>{meal.fat}g Lemak</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAddMeal(meal)}
+                      className={`w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                        addedMealId === meal.id
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white dark:bg-zinc-900 hover:bg-emerald-600 hover:text-white border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 shadow-sm'
+                      }`}
+                    >
+                      {addedMealId === meal.id ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Berhasil Dicatat! 🎉</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3.5 h-3.5 text-emerald-500 group-hover:text-white" />
+                          <span>+ Catat Langsung</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-8 text-center text-zinc-400">
+                  <ChefHat className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-xs">Tidak ada menu yang cocok untuk filter ini. Coba ubah kategori filter.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Form & List Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Input Form */}
@@ -532,6 +767,53 @@ export default function FoodLogPage() {
 
       {/* Modal Edit Profil */}
       <EditProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+
+      {/* Modal Resep AI */}
+      {showAiModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-gradient-to-r from-emerald-900 to-zinc-900 text-white">
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <h3 className="font-bold text-sm">Rekomendasi Resep AI</h3>
+                  <p className="text-[10px] text-emerald-300">Disesuaikan persis dengan sisa kuota Anda ({remainingCalories} kcal • {remainingProtein}g P)</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAiModal(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[70vh] overflow-y-auto space-y-4 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">
+              {isAiLoading ? (
+                <div className="py-12 flex flex-col items-center gap-3 text-center">
+                  <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+                  <p className="text-zinc-500 font-medium">AI sedang menyusun ide resep sehat khas Indonesia sesuai kuota Anda...</p>
+                </div>
+              ) : (
+                <div className="whitespace-pre-wrap space-y-2">
+                  {aiRecipeResult}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-end bg-zinc-50 dark:bg-zinc-950">
+              <button
+                type="button"
+                onClick={() => setShowAiModal(false)}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
