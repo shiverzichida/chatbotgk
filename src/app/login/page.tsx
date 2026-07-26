@@ -79,9 +79,11 @@ export default function LoginPage() {
       <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-8 w-full max-w-md relative z-10 border border-white/20 transition-all duration-300 hover:shadow-emerald-500/10 hover:shadow-3xl">
         {/* Top Branding Badge */}
         <div className="flex items-center justify-center mb-6">
-          <div className="bg-emerald-600 p-3 rounded-2xl shadow-lg shadow-emerald-600/30 ring-4 ring-emerald-500/10">
-            <Dumbbell className="w-8 h-8 text-white animate-pulse" />
-          </div>
+          <img 
+            src="/logo-gk.jpg" 
+            alt="Logo Gizi Kebugaran" 
+            className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500/50 shadow-lg shadow-emerald-600/30" 
+          />
         </div>
 
         {/* Headings */}

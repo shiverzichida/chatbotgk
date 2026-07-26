@@ -566,8 +566,24 @@ export default function FoodLogPage() {
                 recommendedMeals.slice(0, 6).map((meal) => (
                   <div 
                     key={meal.id} 
-                    className="bg-zinc-50/70 dark:bg-zinc-950/40 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between space-y-3 hover:border-emerald-500/50 transition-all group"
+                    className="bg-zinc-50/70 dark:bg-zinc-950/40 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between space-y-3 hover:border-emerald-500/50 transition-all group overflow-hidden"
                   >
+                    {/* Pollinations AI Dynamic Food Photo */}
+                    {meal.imageUrl && (
+                      <div className="relative w-full h-36 rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 -mt-1 shadow-inner">
+                        <img 
+                          src={meal.imageUrl} 
+                          alt={meal.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-white/20">
+                          <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+                          <span>AI Photo</span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">

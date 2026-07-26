@@ -609,26 +609,6 @@ const renderMessageText = (text: string) => {
   // Clean text from raw ACTION_BUTTON code tags
   const cleanText = text.replace(actionButtonRegex, '').trim();
 
-  // Smart Fallback Detection: Jika pesan bot membahas mengenai memulai program / kurus / diet / olahraga
-  // dan belum ada tombol aksi, buatkan otomatis 3 Action Cards!
-  const lowerText = cleanText.toLowerCase();
-  const isProgramQuery = 
-    (lowerText.includes('kurus') || 
-     lowerText.includes('turun berat') || 
-     lowerText.includes('program') || 
-     lowerText.includes('diet') || 
-     lowerText.includes('gemukin') || 
-     lowerText.includes('latihan')) && 
-    (lowerText.includes('bisa') || lowerText.includes('mulai') || lowerText.includes('langkah') || lowerText.includes('tips') || lowerText.includes('jurnal'));
-
-  if (actionButtons.length === 0 && isProgramQuery) {
-    actionButtons.push(
-      { url: '/metrics', label: '🎯 1. Tetapkan Target Program' },
-      { url: '/food-log', label: '🍽️ 2. Jurnal Asupan Makanan' },
-      { url: '/workout-log', label: '🏋️ 3. Jurnal Sesi Olahraga' }
-    );
-  }
-
   const lines = cleanText.split('\n');
 
   return (

@@ -132,16 +132,17 @@ ${prompt_guardrails}
 ${prompt_format}
 
 [ARAHAN AKSI PROGRAM & REDIRECT FITUR]
-Jika pengguna menanyakan tentang cara memulai program, mau kurus, turun berat badan, gemukin badan, atau membuat program latihan:
-1. Berikan dorongan semangat & penyemangat ringkas (maksimal 2-3 paragraf).
-2. Jelaskan bahwa keberhasilan program memerlukan 3 pilar: Target Program, Jurnal Makanan, dan Jurnal Olahraga.
-3. Selalu sertakan 3 tombol aksi interaktif di bagian paling bawah jawaban Anda dengan format persis seperti ini:
+HANYA JIKA pengguna secara eksplisit menanyakan kata 'program' (seperti: "bagaimana mulai program", "program kurus", "program diet", "buat program baru", "program latihan"):
+1. Berikan penjelasan & dorongan semangat ringkas (maksimal 2 paragraf).
+2. Sertakan 3 tombol aksi di bagian paling bawah jawaban Anda dengan format EXACT seperti ini:
 [ACTION_BUTTON: /metrics | 🎯 1. Tetapkan Target Program]
 [ACTION_BUTTON: /food-log | 🍽️ 2. Mulai Catat Asupan Makanan]
-[ACTION_BUTTON: /workout-log | 🏋️ 3. Catat Sesi Olahraga]`;
+[ACTION_BUTTON: /workout-log | 🏋️ 3. Catat Sesi Olahraga]
 
-    // 3.5 Ambil target user untuk menambah konteks personalisasi
-    let userTargetsText = '';
+JIKA PENGGUNA TIDAK MENANYAKAN KATA PROGRAM (misalnya hanya menyapa "halo", bertanya "coba cek lagi", "siapa nama saya", "berapa kalori pisang"):
+JANGAN PERNAH menyertakan [ACTION_BUTTON...] di jawaban Anda!`;
+
+    // 3.5 Ambil profil, target, dan log harian user untuk integrasi data langsung
     if (sessionId) {
       try {
         const { data: sessionData } = await dbClient
@@ -151,29 +152,105 @@ Jika pengguna menanyakan tentang cara memulai program, mau kurus, turun berat ba
           .single();
 
         if (sessionData && sessionData.user_id) {
+          const userId = sessionData.user_id;
+
+          // Query Profile
+          const { data: profileData } = await dbClient
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
+
+          // Query Active Target
           const { data: targetsData } = await dbClient
             .from('user_targets')
-            .select('target_weight, weekly_loss_target, daily_calorie_target, daily_protein_target')
-            .eq('user_id', sessionData.user_id)
+            .select('*')
+            .eq('user_id', userId)
             .eq('is_active', true)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
-          if (targetsData) {
-            userTargetsText = `[TARGET USER SAAT INI]
-- Target Berat Badan: ${targetsData.target_weight ? targetsData.target_weight + ' kg' : 'Tidak ditentukan'}
-- Laju Perubahan Berat: ${targetsData.weekly_loss_target ? (targetsData.weekly_loss_target > 0 ? '+' : '') + targetsData.weekly_loss_target + ' kg/minggu' : 'Tidak ditentukan'}
-- Target Kalori Harian: ${targetsData.daily_calorie_target ? targetsData.daily_calorie_target + ' kcal' : 'Tidak ditentukan'}
-- Target Protein Harian: ${targetsData.daily_protein_target ? targetsData.daily_protein_target + ' g' : 'Tidak ditentukan'}
+          // Query Today's Food Logs
+          const todayStr = new Date().toISOString().split('T')[0];
+          const { data: foodLogsToday } = await dbClient
+            .from('food_logs')
+            .select('food_name, calories, protein, meal_type')
+            .eq('user_id', userId)
+            .eq('date', todayStr);
 
-Gunakan data target di atas untuk memberikan saran gizi atau olahraga yang lebih personal dan relevan dengan tujuan user.`;
-            
-            systemPrompt += `\n\n${userTargetsText}`;
+          const totalCalToday = foodLogsToday ? foodLogsToday.reduce((sum: number, f: any) => sum + (f.calories || 0), 0) : 0;
+          const totalProtToday = foodLogsToday ? foodLogsToday.reduce((sum: number, f: any) => sum + (f.protein || 0), 0) : 0;
+
+          // Calculate age if date_of_birth exists
+          let ageText = '';
+          if (profileData?.date_of_birth) {
+            const birthYear = new Date(profileData.date_of_birth).getFullYear();
+            if (!isNaN(birthYear)) {
+              const calcAge = new Date().getFullYear() - birthYear;
+              ageText = `${calcAge} tahun (Tgl Lahir: ${profileData.date_of_birth})`;
+            }
           }
+
+          const userName = profileData?.full_name || profileData?.name || 'Pengguna';
+          const userEmail = profileData?.email || 'N/A';
+          const userGender = profileData?.gender ? (profileData.gender === 'pria' ? 'Pria' : profileData.gender === 'wanita' ? 'Wanita' : profileData.gender) : 'N/A';
+          const userHeight = profileData?.height_cm ? `${profileData.height_cm} cm` : (profileData?.height ? `${profileData.height} cm` : 'N/A');
+          
+          let userGoal = 'N/A';
+          if (profileData?.goal_type) {
+            if (profileData.goal_type === 'fat_loss') userGoal = 'Fat Loss / Program Kurus';
+            else if (profileData.goal_type === 'muscle_gain') userGoal = 'Bulking / Muscle Gain / Tambah Otot';
+            else if (profileData.goal_type === 'maintenance') userGoal = 'Maintenance / Jaga Kebugaran';
+            else userGoal = profileData.goal_type;
+          }
+
+          let userActivity = 'N/A';
+          if (profileData?.activity_level) {
+            if (profileData.activity_level === 'sedang') userActivity = 'Sedang (Olahraga 3-5x / Minggu)';
+            else if (profileData.activity_level === 'ringan') userActivity = 'Ringan (Jarang Olahraga)';
+            else if (profileData.activity_level === 'berat') userActivity = 'Berat / Sangat Aktif';
+            else userActivity = profileData.activity_level;
+          }
+
+          // Construct Integration Prompt Context
+          let userDataText = `[PROFIL & INTEGRASI DATA REAL-TIME USER SAAT INI]\n`;
+          userDataText += `- Nama Lengkap Pengguna: ${userName}\n`;
+          if (userEmail !== 'N/A') userDataText += `- Email: ${userEmail}\n`;
+          if (userGender !== 'N/A') userDataText += `- Jenis Kelamin: ${userGender}\n`;
+          if (ageText) userDataText += `- Usia: ${ageText}\n`;
+          if (userHeight !== 'N/A') userDataText += `- Tinggi Badan: ${userHeight}\n`;
+          if (userGoal !== 'N/A') userDataText += `- Target Utama Profil: ${userGoal}\n`;
+          if (userActivity !== 'N/A') userDataText += `- Level Aktivitas Fisik: ${userActivity}\n`;
+
+          if (targetsData) {
+            userDataText += `\n[TARGET PROGRAM AKTIF USER]\n`;
+            if (targetsData.start_weight) userDataText += `- Berat Awal Program: ${targetsData.start_weight} kg\n`;
+            if (targetsData.target_weight) userDataText += `- Target Berat Akhir: ${targetsData.target_weight} kg\n`;
+            if (targetsData.daily_calorie_target) userDataText += `- Target Kalori Harian: ${targetsData.daily_calorie_target} kcal\n`;
+            if (targetsData.daily_protein_target) userDataText += `- Target Protein Harian: ${targetsData.daily_protein_target} g\n`;
+            if (targetsData.weekly_workouts_target) userDataText += `- Target Olahraga Mingguan: ${targetsData.weekly_workouts_target} sesi\n`;
+          } else {
+            userDataText += `\n[TARGET PROGRAM AKTIF USER]: Belum membuat target numerik spesifik di menu Metrik (namun target utama profilnya adalah ${userGoal}).\n`;
+          }
+
+          userDataText += `\n[JURNAL ASUPAN HARI INI (${todayStr})]\n`;
+          userDataText += `- Total Kalori Dikonsumsi Hari Ini: ${totalCalToday} kcal ${targetsData?.daily_calorie_target ? `(Sisa Kuota: ${targetsData.daily_calorie_target - totalCalToday} kcal)` : ''}\n`;
+          userDataText += `- Total Protein Dikonsumsi Hari Ini: ${totalProtToday} g\n`;
+          if (foodLogsToday && foodLogsToday.length > 0) {
+            userDataText += `- Makanan Yang Sudah Dicatat Hari Ini: ${foodLogsToday.map((f: any) => `${f.food_name} (${f.calories}kcal)`).join(', ')}\n`;
+          } else {
+            userDataText += `- Makanan Yang Sudah Dicatat Hari Ini: Belum ada pencatatan makanan hari ini.\n`;
+          }
+
+          userDataText += `\nINSTRUKSI PENTING SANGAT KETAT: Anda TERHUBUNG 100% KE DATA PROFIL USER DI ATAS. Jika pengguna bertanya seperti "coba cek lagi", "kamu gak bisa cek profil saya kah?", atau menanyakan data dirinya:
+1. JAWAB DENGAN "Tentu bisa, Sobat Bugar!". SEBUTKAN NAMA LENGKAP PENGGUNA MEREKA SEBAGAI BUKTI ("${userName}"), USIA (${ageText || 'N/A'}), TINGGI BADAN (${userHeight}), JENIS KELAMIN (${userGender}), DAN TARGET UTAMA PROFIL MEREKA (${userGoal}).
+2. JANGAN PERNAH MENJAWAB "Saya tidak dapat melihat/mengakses profil Anda" ATAU MENULIS "Nama: Pengguna". SEBUTKAN NAMA ASLI MEREKA (${userName}) DENGAN RAMAH.`;
+
+          systemPrompt += `\n\n${userDataText}`;
         }
       } catch (e) {
-        console.warn('Gagal mengambil user_targets untuk konteks AI:', e);
+        console.warn('Gagal mengambil data profil/target untuk konteks AI:', e);
       }
     }
 

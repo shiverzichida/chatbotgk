@@ -10,6 +10,12 @@ export interface HealthyMeal {
   description: string;
   recipeTips: string;
   iconEmoji: string;
+  imageUrl?: string;
+}
+
+export function getPollinationsImageUrl(mealName: string, width = 600, height = 400): string {
+  const cleanPrompt = encodeURIComponent(`delicious healthy indonesian food, ${mealName}, high quality photorealistic, gourmet presentation`);
+  return `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${mealName.length * 42}`;
 }
 
 export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
@@ -24,7 +30,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 6,
     description: '150g Dada ayam tanpa kulit di-marinate lada hitam & bumbu oregano, disajikan dengan 100g nasi merah kukus.',
     recipeTips: 'Gunakan pan anti lengket dengan spray minyak zaitun tipis.',
-    iconEmoji: '🍗'
+    iconEmoji: '🍗',
+    imageUrl: getPollinationsImageUrl('grilled chicken breast with red rice')
   },
   {
     id: 'meal_2',
@@ -37,7 +44,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 5,
     description: '4 butir putih telur + 1 telur utuh didadar dengan segenggam bayam segar dan tomat potong.',
     recipeTips: 'Tambahkan sedikit garam oregano & lada hitam untuk cita rasa gurih tanpa kalori berlebih.',
-    iconEmoji: '🍳'
+    iconEmoji: '🍳',
+    imageUrl: getPollinationsImageUrl('egg white omelette with spinach')
   },
   {
     id: 'meal_3',
@@ -50,7 +58,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 10,
     description: '150g Ikan segar dibumbui kunyit, kemiri, daun kemangi, lalu dikukus bungkus daun pisang.',
     recipeTips: 'Kukus 25 menit agar bumbu meresap sempurna tanpa perlu memakai minyak goreng.',
-    iconEmoji: '🐟'
+    iconEmoji: '🐟',
+    imageUrl: getPollinationsImageUrl('indonesian pepes ikan steamed fish in banana leaf')
   },
   {
     id: 'meal_4',
@@ -63,7 +72,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 8,
     description: '120g Daging sapi tenderloin/has dalam dipotong dadu direbus dalam kuah rempah bening dengan wortel & seledri.',
     recipeTips: 'Buang lapisan minyak mengapung di permukaan kuah sup untuk memangkas lemak ekstra.',
-    iconEmoji: '🥣'
+    iconEmoji: '🥣',
+    imageUrl: getPollinationsImageUrl('indonesian beef clear soup with carrots')
   },
   {
     id: 'meal_5',
@@ -76,7 +86,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 6,
     description: '2 potong tahu & 2 potong tempe dibumbui air kelapa, ketumbar, dan gula jawa tipis, lalu dikukus hingga meresap.',
     recipeTips: 'Sangat nikmat disajikan bersama sambal bajak rendah minyak.',
-    iconEmoji: '🫘'
+    iconEmoji: '🫘',
+    imageUrl: getPollinationsImageUrl('steamed indonesian tofu and tempeh bacem')
   },
   {
     id: 'meal_6',
@@ -89,7 +100,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 12,
     description: 'Sayuran rebus (kangkung, tauge, labu siam), 1 telur rebus utuh, tahu kukus, dan 2 sdm bumbu kacang encer.',
     recipeTips: 'Ganti kerupuk dengan emping seperlunya atau lewati kerupuk untuk hemat 100+ kcal.',
-    iconEmoji: '🥗'
+    iconEmoji: '🥗',
+    imageUrl: getPollinationsImageUrl('indonesian gado gado salad with peanut sauce')
   },
   {
     id: 'meal_7',
@@ -102,7 +114,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 5,
     description: '100g Kedelai edamame rebus dengan taburan garam laut tipis.',
     recipeTips: 'Camilan kaya serat & protein tinggi yang sangat praktis.',
-    iconEmoji: '🫛'
+    iconEmoji: '🫛',
+    imageUrl: getPollinationsImageUrl('steamed edamame beans in pod')
   },
   {
     id: 'meal_8',
@@ -115,7 +128,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 7,
     description: '10 tusuk Sate dada ayam bakar dibumbui perasan jeruk nipis & garam, disajikan dengan sambal rawit ulek.',
     recipeTips: 'Pilih daging dada polos tanpa lemak atau kulit.',
-    iconEmoji: '🍢'
+    iconEmoji: '🍢',
+    imageUrl: getPollinationsImageUrl('indonesian sate taichan chicken skewers')
   },
   {
     id: 'meal_9',
@@ -128,7 +142,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 2,
     description: '150g Greek yogurt original tanpa gula ditaburi 50g strawberry segar atau pisang iris.',
     recipeTips: 'Sumber kalsium dan pro-biotik pencernaan yang menyegarkan.',
-    iconEmoji: '🫐'
+    iconEmoji: '🫐',
+    imageUrl: getPollinationsImageUrl('greek yogurt bowl with fresh berries and banana')
   },
   {
     id: 'meal_10',
@@ -141,7 +156,8 @@ export const HEALTHY_MEALS_DATABASE: HealthyMeal[] = [
     fat: 1.5,
     description: '1 scoop Whey Protein Isolate dikocok dengan 300ml air es setelah latihan.',
     recipeTips: 'Cara paling praktis memenuhi kekurangan protein harian tanpa kalori berlebih.',
-    iconEmoji: '🥤'
+    iconEmoji: '🥤',
+    imageUrl: getPollinationsImageUrl('chocolate protein shake in shaker bottle')
   }
 ];
 

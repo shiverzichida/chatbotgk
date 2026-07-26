@@ -10,37 +10,46 @@ export default function LandingPage() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col font-sans text-zinc-900 dark:text-zinc-50 overflow-x-hidden">
       
       {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-600 p-2 rounded-xl text-white">
-              <Dumbbell className="w-6 h-6" />
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+          
+          {/* Logo & Title */}
+          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+            <img 
+              src="/logo-gk.jpg" 
+              alt="Logo Gizi Kebugaran" 
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm flex-shrink-0" 
+            />
+            <div className="leading-tight">
+              <span className="text-xs sm:text-sm font-extrabold tracking-tight block">Gizi Kebugaran</span>
+              <p className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">Gizi Kebugaran AI</p>
             </div>
-            <div>
-              <span className="text-sm font-extrabold tracking-tight">Gizi Kebugaran</span>
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">Gizi Kebugaran</p>
-            </div>
-          </div>
+          </Link>
+
+          {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
             <a href="#fitur" className="hover:text-emerald-600 transition-colors">Fitur Utama</a>
             <a href="#tentang" className="hover:text-emerald-600 transition-colors">Tentang RAG</a>
             <a href="#panduan" className="hover:text-emerald-600 transition-colors">Panduan Gizi</a>
           </nav>
-          <div className="flex items-center gap-3">
+
+          {/* CTA Buttons - Mobile Optimized */}
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <Link 
               href="/login" 
-              className="flex items-center gap-1.5 px-4 py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
+              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-4 sm:py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
             >
-              <User className="w-4 h-4" />
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Masuk</span>
             </Link>
             <Link 
               href="/login" 
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md shadow-emerald-600/10"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-emerald-600/10 whitespace-nowrap"
             >
               Mulai Sekarang
             </Link>
           </div>
+
         </div>
       </header>
 
