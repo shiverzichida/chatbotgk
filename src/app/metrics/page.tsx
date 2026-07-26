@@ -54,6 +54,7 @@ interface UserTarget {
   daily_protein_target: number;
   weekly_workouts_target: number;
   is_active: boolean;
+  is_gamified_mode?: boolean;
 }
 
 interface WorkoutLog {
@@ -138,7 +139,8 @@ export default function MetricsPage() {
     durationWeeks: '4',
     dailyCalories: '',
     dailyProtein: '',
-    weeklyWorkouts: ''
+    weeklyWorkouts: '',
+    mode: 'gamified' as 'gamified' | 'standard'
   });
 
   // Form states for Workout
@@ -402,7 +404,8 @@ export default function MetricsPage() {
         daily_calories_target: parseInt(targetForm.dailyCalories),
         daily_protein_target: parseInt(targetForm.dailyProtein),
         weekly_workouts_target: parseInt(targetForm.weeklyWorkouts),
-        is_active: true
+        is_active: true,
+        is_gamified_mode: targetForm.mode === 'gamified'
       };
 
       const { data, error } = await supabase
@@ -411,15 +414,26 @@ export default function MetricsPage() {
         .select()
         .single();
 
-      if (error) throw error;
-      
-      if (data) {
+      if (!error && data) {
         setActiveTarget(data);
-        setShowTargetModal(false);
+      } else {
+        setActiveTarget({
+          id: String(Date.now()),
+          user_id: userId,
+          start_weight: parseFloat(targetForm.startWeight),
+          target_weight: parseFloat(targetForm.targetWeight),
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
+          daily_calories_target: parseInt(targetForm.dailyCalories),
+          daily_protein_target: parseInt(targetForm.dailyProtein),
+          weekly_workouts_target: parseInt(targetForm.weeklyWorkouts),
+          is_active: true,
+          is_gamified_mode: targetForm.mode === 'gamified'
+        });
       }
+      setShowTargetModal(false);
     } catch (err) {
       console.error('Error creating target:', err);
-      // Fallback for demo purposes
       setActiveTarget({
         id: 'temp',
         user_id: 'temp',
@@ -430,7 +444,8 @@ export default function MetricsPage() {
         daily_calories_target: parseInt(targetForm.dailyCalories),
         daily_protein_target: parseInt(targetForm.dailyProtein),
         weekly_workouts_target: parseInt(targetForm.weeklyWorkouts),
-        is_active: true
+        is_active: true,
+        is_gamified_mode: targetForm.mode === 'gamified'
       });
       setShowTargetModal(false);
     }
@@ -625,8 +640,48 @@ export default function MetricsPage() {
                 <input type="number" required placeholder="Contoh: 4" value={targetForm.weeklyWorkouts} onChange={e => setTargetForm({...targetForm, weeklyWorkouts: e.target.value})} className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
 
+              {/* Mode Selection */}
+              <div>
+                <label className="block text-xs font-bold uppercase text-zinc-500 mb-1.5">Pilihan Mode Tampilan Program</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTargetForm({...targetForm, mode: 'gamified'})}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                      targetForm.mode === 'gamified'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20'
+                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <span>🎮 Mode Game (Rekomendasi)</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                      Peta Petualangan 3 Babak, Level XP, Quest & Badges
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTargetForm({...targetForm, mode: 'standard'})}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                      targetForm.mode === 'standard'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20'
+                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <span>📊 Mode Standar</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                      Ringkasan Target Metrik Kalori & Olahraga Klasik
+                    </p>
+                  </button>
+                </div>
+              </div>
+
               <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-md mt-4">
-                Mulai Program
+                Mulai Program Target
               </button>
             </form>
           </div>
@@ -840,14 +895,16 @@ export default function MetricsPage() {
 
         <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl w-full mx-auto pb-24">
           
-          {/* Expedition Journey Map (Gamification Feature) */}
-          <ExpeditionJourneyMap 
-            userTarget={activeTarget}
-            currentWeight={logs[0]?.weight || activeTarget?.start_weight || 75}
-            completedWorkoutsCount={workoutLogs.length}
-            foodLogsCount={foodLogs.length}
-            onOpenTargetModal={() => setShowTargetModal(true)}
-          />
+          {/* Expedition Journey Map (Hanya Tampil Jika Target Aktif & Mode Game Dipilih) */}
+          {activeTarget && activeTarget.is_gamified_mode !== false && (
+            <ExpeditionJourneyMap 
+              userTarget={activeTarget}
+              currentWeight={logs[0]?.weight || activeTarget?.start_weight || 75}
+              completedWorkoutsCount={workoutLogs.length}
+              foodLogsCount={foodLogs.length}
+              onOpenTargetModal={() => setShowTargetModal(true)}
+            />
+          )}
 
           {/* Section: Target Setting */}
           <section>
