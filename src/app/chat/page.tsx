@@ -590,10 +590,47 @@ export default function ChatPage() {
   );
 }
 
-// Fungsi pembantu untuk memparsing markdown sederhana (bold, list item, subheaders)
+// Fungsi pembantu untuk memparsing markdown sederhana & Tombol Aksi Interaktif (Action Cards)
 const renderMessageText = (text: string) => {
   if (!text) return null;
-  const lines = text.split('\n');
+
+  // Extract explicit ACTION_BUTTON tags: [ACTION_BUTTON: /path | Label]
+  const actionButtonRegex = /\[ACTION_BUTTON:\s*([^|]+)\s*\|\s*([^\]]+)\]/g;
+  const actionButtons: { url: string; label: string }[] = [];
+  let match;
+
+  while ((match = actionButtonRegex.exec(text)) !== null) {
+    actionButtons.push({
+      url: match[1].trim(),
+      label: match[2].trim()
+    });
+  }
+
+  // Clean text from raw ACTION_BUTTON code tags
+  const cleanText = text.replace(actionButtonRegex, '').trim();
+
+  // Smart Fallback Detection: Jika pesan bot membahas mengenai memulai program / kurus / diet / olahraga
+  // dan belum ada tombol aksi, buatkan otomatis 3 Action Cards!
+  const lowerText = cleanText.toLowerCase();
+  const isProgramQuery = 
+    (lowerText.includes('kurus') || 
+     lowerText.includes('turun berat') || 
+     lowerText.includes('program') || 
+     lowerText.includes('diet') || 
+     lowerText.includes('gemukin') || 
+     lowerText.includes('latihan')) && 
+    (lowerText.includes('bisa') || lowerText.includes('mulai') || lowerText.includes('langkah') || lowerText.includes('tips') || lowerText.includes('jurnal'));
+
+  if (actionButtons.length === 0 && isProgramQuery) {
+    actionButtons.push(
+      { url: '/metrics', label: '🎯 1. Tetapkan Target Program' },
+      { url: '/food-log', label: '🍽️ 2. Jurnal Asupan Makanan' },
+      { url: '/workout-log', label: '🏋️ 3. Jurnal Sesi Olahraga' }
+    );
+  }
+
+  const lines = cleanText.split('\n');
+
   return (
     <div className="space-y-2">
       {lines.map((line, idx) => {
@@ -635,7 +672,7 @@ const renderMessageText = (text: string) => {
         
         // Empty lines
         if (!trimmed) {
-          return <div key={idx} className="h-2" />;
+          return <div key={idx} className="h-1.5" />;
         }
         
         // Normal paragraph
@@ -645,6 +682,27 @@ const renderMessageText = (text: string) => {
           </p>
         );
       })}
+
+      {/* Render Action Buttons / Interactive Cards */}
+      {actionButtons.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800/80 space-y-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+            <span>🚀 Akses Langsung Fitur Program Anda:</span>
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+            {actionButtons.map((btn, bIdx) => (
+              <Link
+                key={bIdx}
+                href={btn.url}
+                className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md border border-emerald-400/30 transition-all active:scale-95 group"
+              >
+                <span className="truncate pr-1">{btn.label}</span>
+                <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

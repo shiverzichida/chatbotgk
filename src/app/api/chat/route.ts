@@ -128,8 +128,17 @@ ${prompt_nutrition}
 [BATASAN KEAMANAN & TOPIK]
 ${prompt_guardrails}
 
-[FORMAT JAWABAN]
-${prompt_format}`;
+[FORMAT JAWABAN & ARAHAN FITUR]
+${prompt_format}
+
+[ARAHAN AKSI PROGRAM & REDIRECT FITUR]
+Jika pengguna menanyakan tentang cara memulai program, mau kurus, turun berat badan, gemukin badan, atau membuat program latihan:
+1. Berikan dorongan semangat & penyemangat ringkas (maksimal 2-3 paragraf).
+2. Jelaskan bahwa keberhasilan program memerlukan 3 pilar: Target Program, Jurnal Makanan, dan Jurnal Olahraga.
+3. Selalu sertakan 3 tombol aksi interaktif di bagian paling bawah jawaban Anda dengan format persis seperti ini:
+[ACTION_BUTTON: /metrics | 🎯 1. Tetapkan Target Program]
+[ACTION_BUTTON: /food-log | 🍽️ 2. Mulai Catat Asupan Makanan]
+[ACTION_BUTTON: /workout-log | 🏋️ 3. Catat Sesi Olahraga]`;
 
     // 3.5 Ambil target user untuk menambah konteks personalisasi
     let userTargetsText = '';
