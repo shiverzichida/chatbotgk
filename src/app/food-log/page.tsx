@@ -26,8 +26,14 @@ import {
   Sparkles,
   Lightbulb,
   CheckCircle2,
-  ChefHat
+  ChefHat,
+  Bell,
+  FastForward,
+  Camera
 } from 'lucide-react';
+import MealAlarmSettingsModal, { MealAlarmSchedule } from '@/components/food-log/MealAlarmSettingsModal';
+import MealAlarmReminderPopup from '@/components/food-log/MealAlarmReminderPopup';
+import FoodVisionScannerModal from '@/components/food-log/FoodVisionScannerModal';
 
 interface FoodLog {
   id: string;
@@ -63,6 +69,103 @@ export default function FoodLogPage() {
     calories: '',
     protein: ''
   });
+
+  // Meal Alarm States
+  const [showAlarmSettingsModal, setShowAlarmSettingsModal] = useState(false);
+  const [showAlarmReminderPopup, setShowAlarmReminderPopup] = useState(false);
+  const [showVisionModal, setShowVisionModal] = useState(false);
+  const [popupMealType, setPopupMealType] = useState<'sarapan' | 'makan_siang' | 'snack' | 'makan_malam'>('makan_siang');
+  const [popupTimeStr, setPopupTimeStr] = useState('12:30');
+  const [skipNotification, setSkipNotification] = useState<string | null>(null);
+
+  // Alarm Schedule Checker Timer (Runs every 30 seconds)
+  useEffect(() => {
+    const checkAlarm = () => {
+      const saved = localStorage.getItem('gk_meal_alarms');
+      if (!saved) return;
+      try {
+        const schedules: MealAlarmSchedule[] = JSON.parse(saved);
+        const now = new Date();
+        const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        
+        const triggered = schedules.find(s => s.enabled && s.time === currentHHMM);
+        if (triggered) {
+          setPopupMealType(triggered.id);
+          setPopupTimeStr(triggered.time);
+          setShowAlarmReminderPopup(true);
+
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(`⏰ Waktu ${triggered.label}!`, {
+              body: `Pukul ${triggered.time} WIB. Saatnya catat makanan Anda atau pilih lewati (skip meal)!`,
+              icon: '/logo-gk.jpg'
+            });
+          }
+        }
+      } catch (e) {}
+    };
+
+    const interval = setInterval(checkAlarm, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleTestAlarm = (mealType: 'sarapan' | 'makan_siang' | 'snack' | 'makan_malam', timeStr: string) => {
+    setPopupMealType(mealType);
+    setPopupTimeStr(timeStr);
+    setShowAlarmReminderPopup(true);
+
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification('⏰ Tes Alarm Catat Makanan', {
+        body: `Pukul ${timeStr} WIB. Saatnya catat makanan Anda atau pilih lewati (skip meal)!`,
+        icon: '/logo-gk.jpg'
+      });
+    }
+  };
+
+  const handleSkipMeal = (mealLabel: string) => {
+    setSkipNotification(`Jadwal ${mealLabel} dilewati (Skip Meal). Kuota kalori Anda dihemat untuk waktu makan berikutnya!`);
+    setTimeout(() => setSkipNotification(null), 5000);
+  };
+
+  const handleAddFoodFromAlarm = async (mealType: 'sarapan' | 'makan_siang' | 'makan_malam' | 'snack', foodName: string, calories: number, protein: number) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (userId) {
+        const { data, error } = await supabase
+          .from('food_logs')
+          .insert({
+            user_id: userId,
+            date: todayStr,
+            meal_type: mealType,
+            food_name: foodName,
+            calories,
+            protein
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const updated = [...foodLogs, data];
+          setFoodLogs(updated);
+          localStorage.setItem(`gk_food_logs_${todayStr}`, JSON.stringify(updated));
+          return;
+        }
+      }
+    } catch (e) {}
+
+    const fallbackEntry: FoodLog = {
+      id: String(Date.now()),
+      date: todayStr,
+      meal_type: mealType,
+      food_name: foodName,
+      calories,
+      protein
+    };
+    const updated = [...foodLogs, fallbackEntry];
+    setFoodLogs(updated);
+    localStorage.setItem(`gk_food_logs_${todayStr}`, JSON.stringify(updated));
+  };
 
   useEffect(() => {
     if (!loading) {
@@ -408,10 +511,33 @@ export default function FoodLogPage() {
               <p className="text-xs text-zinc-400">Pantau Asupan Kalori & Protein Anda</p>
             </div>
           </div>
+
+          {/* Meal Alarm Button */}
+          <button
+            onClick={() => setShowAlarmSettingsModal(true)}
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 transition-all rounded-xl text-xs font-bold shadow-sm active:scale-95"
+          >
+            <Bell className="w-4 h-4 text-emerald-500 animate-pulse" />
+            <span className="hidden sm:inline">Atur Alarm Makan</span>
+            <span className="sm:hidden">Alarm</span>
+          </button>
         </header>
 
         {/* Content Area */}
         <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl w-full mx-auto pb-24">
+          
+          {/* Toast Notification when a Meal is Skipped */}
+          {skipNotification && (
+            <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-md animate-in fade-in slide-in-from-top-3 duration-200">
+              <div className="flex items-center gap-2.5">
+                <FastForward className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                <p className="text-xs font-bold">{skipNotification}</p>
+              </div>
+              <button onClick={() => setSkipNotification(null)} className="p-1 text-amber-500 hover:text-amber-700">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           
           {/* Header Banner & Macro Progress Bars */}
           <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
@@ -643,10 +769,23 @@ export default function FoodLogPage() {
           {/* Form & List Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Input Form */}
-            <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-5 h-5 text-emerald-600" />
-                <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-50">Catat Asupan Makan</h4>
+            <div className="lg:col-span-1 bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-4">
+              
+              {/* AI Vision Scanner Button */}
+              <button
+                type="button"
+                onClick={() => setShowVisionModal(true)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl font-extrabold text-xs shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2.5 active:scale-95 group border border-emerald-400/30"
+              >
+                <Camera className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span>📸 Scan Foto Makanan (AI Vision)</span>
+              </button>
+
+              <div className="flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800 pt-3">
+                <div className="flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-emerald-600" />
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Catat Asupan Manual</h4>
+                </div>
               </div>
               <form onSubmit={handleFoodSubmit} className="space-y-4">
                 <div>
@@ -828,6 +967,33 @@ export default function FoodLogPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Pengaturan Alarm Makan */}
+      <MealAlarmSettingsModal
+        isOpen={showAlarmSettingsModal}
+        onClose={() => setShowAlarmSettingsModal(false)}
+        onSave={() => {}}
+        onTestAlarm={handleTestAlarm}
+      />
+
+      {/* Modal Pop-up Pengingat Alarm Makan */}
+      <MealAlarmReminderPopup
+        isOpen={showAlarmReminderPopup}
+        onClose={() => setShowAlarmReminderPopup(false)}
+        mealType={popupMealType}
+        timeStr={popupTimeStr}
+        onAddFood={handleAddFoodFromAlarm}
+        onSkipMeal={handleSkipMeal}
+      />
+
+      {/* Modal AI Vision Scanner */}
+      <FoodVisionScannerModal
+        isOpen={showVisionModal}
+        onClose={() => setShowVisionModal(false)}
+        onScanComplete={(data) => {
+          handleAddFoodFromAlarm(data.mealType, data.foodName, data.calories, data.protein);
+        }}
+      />
     </div>
   );
 }

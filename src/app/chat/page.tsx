@@ -21,13 +21,51 @@ import {
   X,
   Calculator,
   Utensils,
-  Dumbbell
+  Dumbbell,
+  Camera
 } from 'lucide-react';
 
 export default function ChatPage() {
   const { user, loading, logout } = useAuth();
   const [authorized, setAuthorized] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleImageChatUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Str = event.target?.result as string;
+      
+      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const userMsg: { sender: 'user' | 'bot'; text: string; time: string } = { sender: 'user', text: `📸 [Foto Makanan Dilampirkan]`, time: currentTime };
+      
+      setMessages(prev => [...prev, userMsg]);
+      setIsTyping(true);
+
+      try {
+        const res = await fetch('/api/vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64Str, mode: 'chat' })
+        });
+        const data = await res.json();
+        
+        let aiText = data.text || 'Gagal menganalisis foto makanan.';
+        aiText += `\n\n[ACTION_BUTTON: /food-log | 🥗 Catat Makanan Ini Ke Jurnal]`;
+
+        const botMsg: { sender: 'user' | 'bot'; text: string; time: string } = { sender: 'bot', text: aiText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+        setMessages(prev => [...prev, botMsg]);
+      } catch (err) {
+        console.error('Error vision chat:', err);
+      } finally {
+        setIsTyping(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
   const [messages, setMessages] = useState<Array<{ sender: 'bot' | 'user'; text: string; time: string }>>([
     { sender: 'bot', text: 'Halo! Saya asisten AI Gizi Kebugaran Anda. Ada yang bisa saya bantu hari ini terkait program diet, latihan, atau nutrisi Anda?', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
   ]);
@@ -562,17 +600,33 @@ export default function ChatPage() {
 
         {/* Input Footer */}
         <footer className="bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 p-4">
-          <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-3">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            onChange={handleImageChatUpload}
+            className="hidden"
+          />
+          <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-100 dark:hover:bg-emerald-950 text-zinc-600 dark:text-zinc-300 hover:text-emerald-600 rounded-xl transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95 flex-shrink-0"
+              title="Kirim Foto Makanan (AI Vision)"
+            >
+              <Camera className="w-5 h-5 text-emerald-500" />
+            </button>
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Tanyakan tentang nutrisi olahraga, porsi makan, dll..."
-              className="flex-1 px-4 py-3 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+              placeholder="Tanyakan tentang nutrisi olahraga, porsi makan, atau kirim foto makanan..."
+              className="flex-1 px-4 py-3 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
-            <button 
+            <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl transition-all shadow-md active:scale-95"
+              disabled={!input.trim()}
+              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white p-3 rounded-xl font-bold transition-all shadow-md flex items-center justify-center active:scale-95 flex-shrink-0"
             >
               <Send className="w-5 h-5" />
             </button>
