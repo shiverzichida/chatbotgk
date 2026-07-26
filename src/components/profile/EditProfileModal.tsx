@@ -100,7 +100,6 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
           .upsert({
             id: userId,
             full_name: fullName,
-            email: session.user.email || '',
             date_of_birth: dateOfBirth,
             gender,
             height_cm: parseFloat(heightCm) || 175,
