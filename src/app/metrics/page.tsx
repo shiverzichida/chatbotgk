@@ -31,6 +31,7 @@ import {
   Calculator
 } from 'lucide-react';
 import TdeeCalculatorModal from '@/components/metrics/TdeeCalculatorModal';
+import ExpeditionJourneyMap from '@/components/gamification/ExpeditionJourneyMap';
 
 interface LogEntry {
   id: string;
@@ -839,6 +840,15 @@ export default function MetricsPage() {
 
         <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl w-full mx-auto pb-24">
           
+          {/* Expedition Journey Map (Gamification Feature) */}
+          <ExpeditionJourneyMap 
+            userTarget={activeTarget}
+            currentWeight={logs[0]?.weight || activeTarget?.start_weight || 75}
+            completedWorkoutsCount={workoutLogs.length}
+            foodLogsCount={foodLogs.length}
+            onOpenTargetModal={() => setShowTargetModal(true)}
+          />
+
           {/* Section: Target Setting */}
           <section>
             {activeTarget ? (
