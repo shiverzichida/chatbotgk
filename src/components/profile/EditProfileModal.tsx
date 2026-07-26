@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { User, X, Loader2, Save, CheckCircle2 } from 'lucide-react';
+import { User, X, Loader2, Save, CheckCircle2, Camera, Trash2 } from 'lucide-react';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -18,10 +18,32 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
   const [heightCm, setHeightCm] = useState('175');
   const [goalType, setGoalType] = useState('fat_loss');
   const [activityLevel, setActivityLevel] = useState('sedang');
-  const [avatarUrl, setAvatarUrl] = useState('🏋️‍♂️');
+  const [avatarUrl, setAvatarUrl] = useState('');
   
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Ukuran foto terlalu besar. Maksimal 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setAvatarUrl(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setAvatarUrl('');
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -141,24 +163,48 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Avatar / Foto Profil Selector */}
+          {/* Foto Profil Upload & Remove */}
           <div>
-            <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-2">Pilih Avatar / Foto Profil</label>
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-              {['🏋️‍♂️', '🥗', '🏃', '⚡', '🧘', '🥊', '🔥', '🚴'].map((avatar, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setAvatarUrl(avatar)}
-                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center border-2 transition-all flex-shrink-0 ${
-                    avatarUrl === avatar
-                      ? 'border-emerald-500 bg-emerald-500/20 scale-105 shadow-md'
-                      : 'border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 hover:border-emerald-400'
-                  }`}
-                >
-                  {avatar}
-                </button>
-              ))}
+            <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-2">Foto Profil</label>
+            <div className="flex items-center gap-4 p-3.5 bg-zinc-50 dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+              
+              {/* Photo Preview or Default Initial */}
+              <div className="relative w-14 h-14 rounded-full overflow-hidden bg-emerald-700 text-white flex items-center justify-center font-bold text-lg uppercase flex-shrink-0 border-2 border-emerald-500/50 shadow-md">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Foto Profil" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{fullName ? fullName.charAt(0) : 'U'}</span>
+                )}
+              </div>
+
+              {/* Upload & Remove Buttons */}
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Upload Foto</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageChange} 
+                      className="hidden" 
+                    />
+                  </label>
+
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="px-3 py-1.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-red-950/40 hover:text-red-400 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl transition-colors flex items-center gap-1 active:scale-95"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                      <span>Hapus</span>
+                    </button>
+                  )}
+                </div>
+                <p className="text-[10px] text-zinc-400">Default kosong (inisial nama). Format: JPG, PNG, WEBP (maks. 5MB).</p>
+              </div>
+
             </div>
           </div>
 
