@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -50,7 +52,22 @@ export default function LoginPage() {
         if (role === 'admin') {
           window.location.href = '/admin';
         } else {
-          window.location.href = '/chat';
+          // Cek kelengkapan profil pengguna
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('date_of_birth, gender, height_cm, goal_type')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          const isIncomplete = !profile || !profile.date_of_birth || !profile.gender || !profile.height_cm || !profile.goal_type;
+          
+          if (isIncomplete) {
+            // Arahkan ke /metrics dan buka modal update profil otomatis
+            window.location.href = '/metrics?openProfile=true';
+          } else {
+            // Profil sudah 100% lengkap -> arahkan ke /metrics
+            window.location.href = '/metrics';
+          }
         }
       }
     } catch (err: any) {
@@ -122,6 +139,8 @@ export default function LoginPage() {
             {error}
           </div>
         )}
+
+
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import EditProfileModal from '@/components/profile/EditProfileModal';
+import ProfileCompletionBanner from '@/components/profile/ProfileCompletionBanner';
 import { HealthyMeal, HEALTHY_MEALS_DATABASE, getRecommendedMeals } from '@/lib/healthyMealsData';
 import {
   Utensils,
@@ -411,7 +412,7 @@ export default function FoodLogPage() {
     <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans overflow-hidden">
       
       {/* Desktop Sidebar */}
-      <aside className="w-64 bg-zinc-900 text-zinc-100 flex flex-col hidden md:flex border-r border-zinc-800 flex-shrink-0">
+      <aside className="hidden md:flex md:w-72 w-72 h-screen bg-zinc-900 text-zinc-100 flex-col border-r border-zinc-800 flex-shrink-0 overflow-hidden sticky top-0 z-20">
         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
           <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
           <div>
@@ -482,21 +483,84 @@ export default function FoodLogPage() {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-80 bg-zinc-900 text-zinc-100 flex flex-col shadow-2xl border-r border-zinc-800 z-10">
-            <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-600 p-2 rounded-xl text-white"><Bot className="w-5 h-5" /></div>
-                <div><h1 className="text-sm font-bold">Gizi Kebugaran</h1><p className="text-[10px] text-emerald-500">Gizi Kebugaran AI</p></div>
+          <aside className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-zinc-900 text-zinc-100 flex flex-col justify-between shadow-2xl border-r border-zinc-800 z-50 overflow-hidden">
+            
+            {/* Header & User Info */}
+            <div className="flex flex-col border-b border-zinc-800">
+              <div className="p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
+                  <div>
+                    <h1 className="text-sm font-bold text-white">Gizi Kebugaran</h1>
+                    <p className="text-[10px] text-emerald-500 font-semibold">Gizi Kebugaran AI</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 bg-zinc-800 text-zinc-400 rounded-lg hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 bg-zinc-800 text-zinc-400 rounded-lg"><X className="w-4 h-4" /></button>
+
+              {/* User Profile Card */}
+              <div 
+                onClick={() => { setIsMobileMenuOpen(false); setShowProfileModal(true); }}
+                className="mx-4 mb-4 p-3 bg-zinc-800/60 hover:bg-zinc-800 rounded-2xl border border-zinc-700/50 flex items-center gap-3 cursor-pointer transition-all group"
+                title="Klik untuk ubah profil"
+              >
+                <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white uppercase flex-shrink-0">
+                  {user?.name ? user.name.charAt(0) : 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-white truncate group-hover:text-emerald-400">{user?.name || 'User'}</p>
+                    <User className="w-3 h-3 text-zinc-400 group-hover:text-emerald-400" />
+                  </div>
+                  <p className="text-[10px] text-zinc-400 truncate">{user?.email || 'N/A'}</p>
+                </div>
+              </div>
             </div>
-            <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto pt-6">
-              <Link href="/chat" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-zinc-400 text-sm"><MessageSquare className="w-4 h-4" /><span>Chatbot AI</span></Link>
-              <Link href="/food-log" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 bg-zinc-800 text-white font-medium text-sm rounded-xl"><Utensils className="w-4 h-4 text-emerald-500" /><span>Jurnal Makanan</span></Link>
-              <Link href="/workout-log" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-zinc-400 text-sm"><Dumbbell className="w-4 h-4 text-emerald-500" /><span>Jurnal Olahraga</span></Link>
-              <Link href="/metrics" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-zinc-400 text-sm"><TrendingUp className="w-4 h-4" /><span>Komposisi Tubuh & Target</span></Link>
-              <Link href="/calculator" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-zinc-400 text-sm"><Calculator className="w-4 h-4 text-emerald-500" /><span>Kalkulator TDEE & Makro</span></Link>
+
+            {/* Nav Links */}
+            <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto py-4">
+              <p className="px-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
+              <Link href="/chat" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+                <MessageSquare className="w-4 h-4" />
+                <span>Chatbot AI</span>
+              </Link>
+              <Link href="/food-log" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 bg-zinc-800 text-white font-medium text-sm rounded-xl transition-colors">
+                <Utensils className="w-4 h-4 text-emerald-500" />
+                <span>Jurnal Makanan</span>
+              </Link>
+              <Link href="/workout-log" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+                <Dumbbell className="w-4 h-4 text-emerald-500" />
+                <span>Jurnal Olahraga</span>
+              </Link>
+              <Link href="/metrics" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+                <TrendingUp className="w-4 h-4" />
+                <span>Komposisi Tubuh & Target</span>
+              </Link>
+              <Link href="/calculator" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+                <Calculator className="w-4 h-4 text-emerald-500" />
+                <span>Kalkulator TDEE & Makro</span>
+              </Link>
+              {user?.role === 'admin' && (
+                <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+                  <BookOpen className="w-4 h-4 text-emerald-500" />
+                  <span>Knowledge Base</span>
+                </Link>
+              )}
             </nav>
+
+            {/* Logout Footer Block */}
+            <div className="p-4 border-t border-zinc-800 bg-zinc-950 flex-shrink-0">
+              <button 
+                onClick={logout} 
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-zinc-800/80 hover:bg-red-950/40 text-zinc-300 hover:text-red-400 rounded-xl text-xs font-bold transition-all border border-zinc-700/40"
+              >
+                <LogOut className="w-4 h-4 text-red-400" />
+                <span>Log Out</span>
+              </button>
+            </div>
+
           </aside>
         </div>
       )}
@@ -525,6 +589,7 @@ export default function FoodLogPage() {
 
         {/* Content Area */}
         <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl w-full mx-auto pb-24">
+          <ProfileCompletionBanner onOpenEditProfile={() => setShowProfileModal(true)} />
           
           {/* Toast Notification when a Meal is Skipped */}
           {skipNotification && (

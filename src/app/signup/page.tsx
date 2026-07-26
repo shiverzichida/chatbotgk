@@ -19,6 +19,8 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -124,6 +126,8 @@ export default function SignupPage() {
                 {error}
               </div>
             )}
+
+
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">

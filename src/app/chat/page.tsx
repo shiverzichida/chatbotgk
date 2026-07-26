@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import EditProfileModal from '@/components/profile/EditProfileModal';
+import ProfileCompletionBanner from '@/components/profile/ProfileCompletionBanner';
 import { 
   Bot, 
   Send, 
@@ -324,7 +325,7 @@ export default function ChatPage() {
     <div className="h-[100dvh] w-screen bg-zinc-50 dark:bg-zinc-950 flex font-sans overflow-hidden">
       
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex md:w-80 h-full bg-zinc-900 text-zinc-100 flex-col border-r border-zinc-800 flex-shrink-0 overflow-hidden">
+      <aside className="hidden md:flex md:w-72 w-72 h-screen bg-zinc-900 text-zinc-100 flex-col border-r border-zinc-800 flex-shrink-0 overflow-hidden sticky top-0 z-20">
         {/* Header/Logo */}
         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
           <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
@@ -404,7 +405,7 @@ export default function ChatPage() {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           {/* Sidebar content drawer */}
-          <aside className="absolute inset-y-0 left-0 w-80 bg-zinc-900 text-zinc-100 flex flex-col shadow-2xl border-r border-zinc-800 animate-slide-in z-10">
+          <aside className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-zinc-900 text-zinc-100 flex flex-col justify-between shadow-2xl border-r border-zinc-800 z-50 overflow-hidden">
             {/* Drawer Header */}
             <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -553,6 +554,8 @@ export default function ChatPage() {
 
         {/* Chat History Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-zinc-50/50 dark:bg-zinc-900/10">
+          <ProfileCompletionBanner onOpenEditProfile={() => setShowProfileModal(true)} />
+
           {messages.map((msg, index) => (
             <div 
               key={index}

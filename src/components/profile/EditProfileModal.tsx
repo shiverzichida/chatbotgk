@@ -18,6 +18,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
   const [heightCm, setHeightCm] = useState('175');
   const [goalType, setGoalType] = useState('fat_loss');
   const [activityLevel, setActivityLevel] = useState('sedang');
+  const [avatarUrl, setAvatarUrl] = useState('🏋️‍♂️');
   
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -49,6 +50,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
           if (data.height_cm) setHeightCm(String(data.height_cm));
           if (data.goal_type) setGoalType(data.goal_type);
           if (data.activity_level) setActivityLevel(data.activity_level);
+          if (data.avatar_url) setAvatarUrl(data.avatar_url);
         }
       } catch (err) {
         console.warn('Gagal memuat detail profil:', err);
@@ -81,7 +83,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
             gender,
             height_cm: parseFloat(heightCm) || 175,
             goal_type: goalType,
-            activity_level: activityLevel
+            activity_level: activityLevel,
+            avatar_url: avatarUrl
           });
 
         if (profileError) throw profileError;
@@ -90,7 +93,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
         await supabase.auth.updateUser({
           data: {
             name: fullName,
-            goal_type: goalType
+            goal_type: goalType,
+            avatar_url: avatarUrl
           }
         });
       }
@@ -137,8 +141,29 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Avatar / Foto Profil Selector */}
           <div>
-            <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Nama Lengkap</label>
+            <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-2">Pilih Avatar / Foto Profil</label>
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+              {['🏋️‍♂️', '🥗', '🏃', '⚡', '🧘', '🥊', '🔥', '🚴'].map((avatar, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setAvatarUrl(avatar)}
+                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center border-2 transition-all flex-shrink-0 ${
+                    avatarUrl === avatar
+                      ? 'border-emerald-500 bg-emerald-500/20 scale-105 shadow-md'
+                      : 'border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950 hover:border-emerald-400'
+                  }`}
+                >
+                  {avatar}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Nama Lengkap</label>
             <input 
               type="text" 
               required 

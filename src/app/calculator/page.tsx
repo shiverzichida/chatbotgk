@@ -206,8 +206,11 @@ export default function CalculatorPage() {
         }
       }
 
+      localStorage.setItem('gk_tdee_calories', String(targetCalories));
+      localStorage.setItem('gk_tdee_protein', String(targetProtein));
+
       setApplySuccess(true);
-      setTimeout(() => setApplySuccess(false), 3000);
+      setTimeout(() => setApplySuccess(false), 3500);
     } catch (err) {
       console.error('Gagal menerapkan target dari Kalkulator:', err);
     } finally {
@@ -230,7 +233,7 @@ export default function CalculatorPage() {
     <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans overflow-hidden">
       
       {/* Sidebar Navigation - Desktop */}
-      <aside className="w-64 bg-zinc-900 text-zinc-100 flex flex-col hidden md:flex border-r border-zinc-800 flex-shrink-0">
+      <aside className="hidden md:flex md:w-72 w-72 h-screen bg-zinc-900 text-zinc-100 flex-col border-r border-zinc-800 flex-shrink-0 overflow-hidden sticky top-0 z-20">
         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
           <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
           <div>
@@ -307,12 +310,10 @@ export default function CalculatorPage() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-80 bg-zinc-900 text-zinc-100 flex flex-col shadow-2xl border-r border-zinc-800 z-10">
-            <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+          <aside className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-zinc-900 text-zinc-100 flex flex-col justify-between shadow-2xl border-r border-zinc-800 z-50 overflow-hidden">
+            <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-emerald-600 p-2 rounded-xl text-white">
-                  <Bot className="w-5 h-5" />
-                </div>
+                <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-8 h-8 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
                 <div>
                   <h1 className="text-sm font-bold tracking-tight">Gizi Kebugaran</h1>
                   <p className="text-[10px] text-emerald-500 font-medium">Gizi Kebugaran AI</p>
@@ -320,7 +321,7 @@ export default function CalculatorPage() {
               </div>
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1.5 bg-zinc-800 text-zinc-400 rounded-lg"
+                className="p-1.5 bg-zinc-800 text-zinc-400 rounded-lg hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -414,11 +415,11 @@ export default function CalculatorPage() {
               <form className="space-y-4" onSubmit={e => e.preventDefault()}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Jenis Kelamin</label>
+                    <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Jenis Kelamin</label>
                     <select 
                       value={gender} 
                       onChange={e => setGender(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 capitalize"
+                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 capitalize font-medium"
                     >
                       <option value="pria">Pria</option>
                       <option value="wanita">Wanita</option>
@@ -426,45 +427,45 @@ export default function CalculatorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Usia (Tahun)</label>
+                    <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Usia (Tahun)</label>
                     <input 
                       type="number" 
                       value={age} 
                       onChange={e => setAge(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 font-medium"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Tinggi Badan (cm)</label>
+                    <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Tinggi Badan (cm)</label>
                     <input 
                       type="number" 
                       value={heightCm} 
                       onChange={e => setHeightCm(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Berat Badan (kg)</label>
+                    <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Berat Badan (kg)</label>
                     <input 
                       type="number" 
                       step="0.1" 
                       value={weightKg} 
                       onChange={e => setWeightKg(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 font-medium"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Level Aktivitas Fisik</label>
+                  <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Level Aktivitas Fisik</label>
                   <select 
                     value={activityLevel} 
                     onChange={e => setActivityLevel(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 font-medium"
                   >
                     <option value="sedentari">Sedentari (Banyak Duduk / Minim Olahraga)</option>
                     <option value="ringan">Ringan (Olahraga 1-2x per minggu)</option>
@@ -474,11 +475,11 @@ export default function CalculatorPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase text-zinc-400 mb-1.5">Program Target Utama</label>
+                  <label className="block text-xs font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">Program Target Utama</label>
                   <select 
                     value={goalType} 
                     onChange={e => setGoalType(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm text-zinc-900 dark:text-zinc-50 focus:ring-2 focus:ring-emerald-500 font-medium"
                   >
                     <option value="fat_loss">🔥 Fat Loss / Potong Lemak (-400 kcal)</option>
                     <option value="muscle_gain">💪 Muscle Gain / Tambah Massa Otot (+300 kcal)</option>
@@ -542,24 +543,30 @@ export default function CalculatorPage() {
                   </div>
                 </div>
 
-                {/* Apply Button */}
-                <div className="pt-2 flex items-center justify-between gap-4">
-                  {applySuccess && (
-                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold bg-emerald-950/80 px-3.5 py-2 rounded-xl border border-emerald-800">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Target berhasil diterapkan ke profil Anda!</span>
-                    </div>
-                  )}
+                {/* Apply Button & Advice Note */}
+                <div className="pt-2 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    {applySuccess && (
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold bg-emerald-950/80 px-3.5 py-2.5 rounded-xl border border-emerald-800">
+                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                        <span>Target kalori {targetCalories} kcal/hari berhasil diterapkan ke profil & target aktif Anda!</span>
+                      </div>
+                    )}
 
-                  <button 
-                    type="button"
-                    onClick={handleApplyTarget}
-                    disabled={isApplying}
-                    className="ml-auto bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg flex items-center gap-2.5 active:scale-95 disabled:opacity-50"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>{isApplying ? 'Menyimpan Target...' : 'Terapkan ke Target Program Saya'}</span>
-                  </button>
+                    <button 
+                      type="button"
+                      onClick={handleApplyTarget}
+                      disabled={isApplying}
+                      className="ml-auto bg-emerald-500 hover:bg-emerald-400 text-zinc-950 px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2.5 active:scale-95 disabled:opacity-50"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>{isApplying ? 'Menyimpan Target...' : '🔄 Terapkan / Hitung Ulang Target Saya'}</span>
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-zinc-400 dark:text-zinc-300 italic text-right leading-relaxed bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-700/40">
+                    💡 <b>Anjuran Evaluasi:</b> Kami menganjurkan Anda untuk menghitung ulang TDEE setiap <b>2 minggu sekali</b> setelah program berjalan agar rekomendasi kalori selalu selaras dengan perubahan berat badan terbaru Anda.
+                  </p>
                 </div>
               </div>
 
@@ -567,18 +574,21 @@ export default function CalculatorPage() {
               <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-4">
                 <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-50 font-bold text-sm">
                   <Info className="w-4 h-4 text-emerald-600" />
-                  <span>Bagaimana Rumus Sains Mifflin-St Jeor Bekerja?</span>
+                  <span>Penjelasan Istilah Sains Gizi & Energi</span>
                 </div>
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-2 leading-relaxed">
-                  <p>
-                    <strong>BMR (Basal Metabolic Rate):</strong> Jumlah kalori minimal yang dibakar tubuh Anda per hari dalam keadaan istirahat total hanya untuk mempertahankan fungsi organ vital (jantung, otak, paru-paru).
-                  </p>
-                  <p>
-                    <strong>TDEE (Total Daily Energy Expenditure):</strong> Total energi harian yang dibakar tubuh setelah memperhitungkan seluruh aktivitas fisik dan olahraga harian Anda.
-                  </p>
-                  <p>
-                    <strong>Penyesuaian Program:</strong> Untuk menurunkan lemak (*Fat Loss*), disarankan membuat defisit kalori terukur (sekitar 300–500 kcal di bawah TDEE) sambil menjaga asupan protein tinggi (~2.0 gram per kg berat badan) agar massa otot tidak habis terbuang.
-                  </p>
+                <div className="text-xs text-zinc-700 dark:text-zinc-200 space-y-3 leading-relaxed">
+                  <div className="bg-zinc-50 dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                    <p className="font-extrabold text-emerald-700 dark:text-emerald-400 text-xs mb-1">BMR (Basal Metabolic Rate)</p>
+                    <p>Jumlah kalori minimal yang dibakar tubuh Anda per hari dalam keadaan istirahat total hanya untuk mempertahankan fungsi organ vital (jantung, otak, paru-paru).</p>
+                  </div>
+                  <div className="bg-zinc-50 dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                    <p className="font-extrabold text-sky-700 dark:text-sky-400 text-xs mb-1">TDEE (Total Daily Energy Expenditure)</p>
+                    <p>Total energi harian yang dibakar tubuh secara penuh setelah memperhitungkan seluruh aktivitas fisik harian dan sesi olahraga Anda.</p>
+                  </div>
+                  <div className="bg-zinc-50 dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                    <p className="font-extrabold text-amber-700 dark:text-amber-400 text-xs mb-1">Penyesuaian Program Defisit / Surplus</p>
+                    <p>Untuk penurunan lemak (*Fat Loss*), disarankan membuat defisit kalori terukur (300–500 kcal di bawah TDEE) sambil menjaga asupan protein tinggi (~2.0g per kg BB) agar massa otot terlindungi.</p>
+                  </div>
                 </div>
               </div>
 

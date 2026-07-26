@@ -28,7 +28,8 @@ import {
   FileText,
   Menu,
   Utensils,
-  Calculator
+  Calculator,
+  ArrowRight
 } from 'lucide-react';
 import TdeeCalculatorModal from '@/components/metrics/TdeeCalculatorModal';
 import ExpeditionJourneyMap from '@/components/gamification/ExpeditionJourneyMap';
@@ -168,6 +169,12 @@ export default function MetricsPage() {
         window.location.href = '/login';
       } else {
         setAuthorized(true);
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('openProfile') === 'true') {
+            setShowProfileModal(true);
+          }
+        }
       }
     }
   }, [user, loading]);
@@ -589,7 +596,7 @@ export default function MetricsPage() {
   if (!authorized) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex font-sans">
+    <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans overflow-hidden">
       
       {/* Target Modal */}
       {showTargetModal && (
@@ -689,7 +696,7 @@ export default function MetricsPage() {
       )}
 
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex md:w-80 bg-zinc-900 text-zinc-100 flex-col border-r border-zinc-800 flex-shrink-0">
+      <aside className="hidden md:flex md:w-72 w-72 h-screen bg-zinc-900 text-zinc-100 flex-col border-r border-zinc-800 flex-shrink-0 overflow-hidden sticky top-0 z-20">
         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">
           <img src="/logo-gk.jpg" alt="Logo Gizi Kebugaran" className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shadow-sm" />
           <div>
@@ -765,7 +772,7 @@ export default function MetricsPage() {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           {/* Sidebar content drawer */}
-          <aside className="absolute inset-y-0 left-0 w-80 bg-zinc-900 text-zinc-100 flex flex-col shadow-2xl border-r border-zinc-800 animate-slide-in z-10">
+          <aside className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-zinc-900 text-zinc-100 flex flex-col justify-between shadow-2xl border-r border-zinc-800 z-50 overflow-hidden">
             {/* Drawer Header */}
             <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -895,6 +902,26 @@ export default function MetricsPage() {
 
         <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-6xl w-full mx-auto pb-24">
           
+          {/* Card Ajakan Konsultasi AI Chat */}
+          <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-zinc-900 rounded-3xl p-6 shadow-xl border border-emerald-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 inline-block mb-1">
+                🚀 KONSULTASI INTERAKTIF
+              </span>
+              <h3 className="text-lg font-black text-white">Siap untuk Memulai Programmu? Konsultasi Sekarang!</h3>
+              <p className="text-xs text-zinc-300 max-w-2xl leading-relaxed">
+                Profil fisik & target nutrisimu sudah tersimpan. Diskusi dan konsultasi gizi/latihan secara langsung bersama <b>AI Coach Mury</b> sekarang!
+              </p>
+            </div>
+            <Link
+              href="/chat"
+              className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-xs rounded-2xl shadow-lg transition-all flex items-center gap-2 active:scale-95 whitespace-nowrap self-end md:self-center"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Konsultasi Sekarang</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
           {/* Expedition Journey Map (Hanya Tampil Jika Target Aktif & Mode Game Dipilih) */}
           {activeTarget && activeTarget.is_gamified_mode !== false && (
             <ExpeditionJourneyMap 
