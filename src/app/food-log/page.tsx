@@ -6,6 +6,11 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 import ProfileCompletionBanner from '@/components/profile/ProfileCompletionBanner';
+import WeeklyMealPlanCard from '@/components/food-log/WeeklyMealPlanCard';
+import FastingTrackerCard from '@/components/fasting/FastingTrackerCard';
+import SleepTrackerCard from '@/components/sleep/SleepTrackerCard';
+import DailyCommitmentBanner from '@/components/commitment/DailyCommitmentBanner';
+import DailyRecapAlarmModal from '@/components/commitment/DailyRecapAlarmModal';
 import { HealthyMeal, HEALTHY_MEALS_DATABASE, getRecommendedMeals } from '@/lib/healthyMealsData';
 import {
   Utensils,
@@ -27,6 +32,8 @@ import {
   Sparkles,
   Lightbulb,
   CheckCircle2,
+  Clock,
+  Moon,
   ChefHat,
   Bell,
   FastForward,
@@ -78,6 +85,7 @@ export default function FoodLogPage() {
   const [popupMealType, setPopupMealType] = useState<'sarapan' | 'makan_siang' | 'snack' | 'makan_malam'>('makan_siang');
   const [popupTimeStr, setPopupTimeStr] = useState('12:30');
   const [skipNotification, setSkipNotification] = useState<string | null>(null);
+  const [activeFoodSubTab, setActiveFoodSubTab] = useState<'log' | 'planner' | 'catalog' | 'fasting' | 'sleep'>('log');
 
   // Alarm Schedule Checker Timer (Runs every 30 seconds)
   useEffect(() => {
@@ -119,6 +127,27 @@ export default function FoodLogPage() {
         body: `Pukul ${timeStr} WIB. Saatnya catat makanan Anda atau pilih lewati (skip meal)!`,
         icon: '/logo-gk.jpg'
       });
+    }
+  };
+
+  const handleAddMealFromCatalog = async (meal: HealthyMeal) => {
+    const todayStr = foodForm.date;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (userId) {
+        await supabase.from('food_logs').insert({
+          user_id: userId,
+          date: todayStr,
+          meal_type: 'makan_siang',
+          food_name: meal.name,
+          calories: meal.calories,
+          protein: meal.protein
+        });
+        fetchFoodData();
+      }
+    } catch (e) {
+      console.error('Gagal mencatat makanan dari katalog:', e);
     }
   };
 
@@ -178,48 +207,47 @@ export default function FoodLogPage() {
     }
   }, [user, loading]);
 
+  const fetchFoodData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) return;
+
+      // Fetch active target
+      const { data: target } = await supabase
+        .from('user_targets')
+        .select('id, daily_calories_target, daily_protein_target')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (target) setActiveTarget(target);
+
+      // Fetch Today's food logs
+      const todayStr = foodForm.date;
+      const { data: foodData, error: foodErr } = await supabase
+        .from('food_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('date', todayStr)
+        .order('created_at', { ascending: true });
+
+      if (!foodErr && foodData) {
+        setFoodLogs(foodData);
+        localStorage.setItem(`gk_food_logs_${todayStr}`, JSON.stringify(foodData));
+      } else {
+        const fallbackFood = localStorage.getItem(`gk_food_logs_${todayStr}`);
+        if (fallbackFood) {
+          try { setFoodLogs(JSON.parse(fallbackFood)); } catch (e) {}
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching food logs:', err);
+    }
+  };
+
   useEffect(() => {
     if (!authorized) return;
-
-    const fetchFoodData = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id;
-        if (!userId) return;
-
-        // Fetch active target
-        const { data: target } = await supabase
-          .from('user_targets')
-          .select('id, daily_calories_target, daily_protein_target')
-          .eq('user_id', userId)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (target) setActiveTarget(target);
-
-        // Fetch Today's food logs
-        const todayStr = foodForm.date;
-        const { data: foodData, error: foodErr } = await supabase
-          .from('food_logs')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('date', todayStr)
-          .order('created_at', { ascending: true });
-
-        if (!foodErr && foodData) {
-          setFoodLogs(foodData);
-          localStorage.setItem(`gk_food_logs_${todayStr}`, JSON.stringify(foodData));
-        } else {
-          const fallbackFood = localStorage.getItem(`gk_food_logs_${todayStr}`);
-          if (fallbackFood) {
-            try { setFoodLogs(JSON.parse(fallbackFood)); } catch (e) {}
-          }
-        }
-      } catch (err) {
-        console.warn('Error fetching food logs:', err);
-      }
-    };
-
     fetchFoodData();
   }, [authorized, foodForm.date]);
 
@@ -446,6 +474,10 @@ export default function FoodLogPage() {
             <MessageSquare className="w-4 h-4" />
             <span>Chatbot AI</span>
           </Link>
+          <Link href="/vision" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+            <Camera className="w-4 h-4 text-emerald-500" />
+            <span>📸 AI Food Scanner</span>
+          </Link>
           <Link href="/food-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
             <Utensils className="w-4 h-4 text-emerald-500" />
             <span>Jurnal Makanan</span>
@@ -530,6 +562,10 @@ export default function FoodLogPage() {
                 <Utensils className="w-4 h-4 text-emerald-500" />
                 <span>Jurnal Makanan</span>
               </Link>
+              <Link href="/vision" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+                <Camera className="w-4 h-4 text-emerald-500" />
+                <span>📸 AI Food Scanner</span>
+              </Link>
               <Link href="/workout-log" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
                 <Dumbbell className="w-4 h-4 text-emerald-500" />
                 <span>Jurnal Olahraga</span>
@@ -590,6 +626,92 @@ export default function FoodLogPage() {
         {/* Content Area */}
         <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl w-full mx-auto pb-24">
           <ProfileCompletionBanner onOpenEditProfile={() => setShowProfileModal(true)} />
+
+          {/* Sub-Tabs Navigation Bar - Responsive Segment Grid dengan Garis Grid Tipis */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 bg-zinc-100/80 dark:bg-zinc-950/80 p-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setActiveFoodSubTab('log')}
+              className={`py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 text-center border ${
+                activeFoodSubTab === 'log'
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/80'
+              }`}
+            >
+              <Utensils className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">📝 Jurnal Makanan</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveFoodSubTab('planner')}
+              className={`py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 text-center border ${
+                activeFoodSubTab === 'planner'
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/80'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 flex-shrink-0" />
+              <span className="truncate">🥗 AI Meal Plan</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveFoodSubTab('catalog')}
+              className={`py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 text-center border ${
+                activeFoodSubTab === 'catalog'
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/80'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">💡 Katalog Sehat</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveFoodSubTab('fasting')}
+              className={`py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 text-center border ${
+                activeFoodSubTab === 'fasting'
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/80'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <span className="truncate">⏱️ Puasa Intermiten</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveFoodSubTab('sleep')}
+              className={`py-2.5 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 text-center border ${
+                activeFoodSubTab === 'sleep'
+                  ? 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/20 scale-[1.02]'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/80'
+              }`}
+            >
+              <Moon className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+              <span className="truncate">🌙 Tidur & Recovery</span>
+            </button>
+          </div>
+
+          {/* TAB 4: Intermittent Fasting Tracker */}
+          {activeFoodSubTab === 'fasting' && (
+            <FastingTrackerCard />
+          )}
+
+          {/* TAB 5: Sleep & Recovery Tracker */}
+          {activeFoodSubTab === 'sleep' && (
+            <SleepTrackerCard />
+          )}
+
+          {/* TAB 2: AI Weekly Meal Plan Generator 7-Hari Khas Indonesia */}
+          {activeFoodSubTab === 'planner' && (
+            <WeeklyMealPlanCard 
+              targetCalories={activeTarget?.daily_calories_target || 1550}
+              onMealLogged={fetchFoodData}
+            />
+          )}
           
           {/* Toast Notification when a Meal is Skipped */}
           {skipNotification && (
@@ -604,8 +726,11 @@ export default function FoodLogPage() {
             </div>
           )}
           
-          {/* Header Banner & Macro Progress Bars */}
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
+          {/* TAB 1: Header Banner & Macro Progress Bars + Form Input Jurnal */}
+          {activeFoodSubTab === 'log' && (
+            <>
+              {/* Header Banner & Macro Progress Bars */}
+              <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
@@ -683,151 +808,6 @@ export default function FoodLogPage() {
                   />
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Section: Smart Meal & Recipe Recommendation Engine */}
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
-                  <Lightbulb className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
-                    <span>Rekomendasi Makanan Sehat Khas Indonesia</span>
-                    <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">
-                      Pas Sisa Kuota
-                    </span>
-                  </h3>
-                  <p className="text-xs text-zinc-400">Sisa Kuota Hari Ini: <span className="font-bold text-zinc-700 dark:text-zinc-300">{remainingCalories} kcal</span> • <span className="font-bold text-emerald-600 dark:text-emerald-400">{remainingProtein}g protein</span></p>
-                </div>
-              </div>
-
-              {/* Filter Tabs & AI Button */}
-              <div className="flex flex-wrap items-center gap-2">
-                <button 
-                  type="button"
-                  onClick={() => setRecommendationCategory('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    recommendationCategory === 'all'
-                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
-                  }`}
-                >
-                  Semua
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setRecommendationCategory('high_protein')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    recommendationCategory === 'high_protein'
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
-                  }`}
-                >
-                  🥩 Tinggi Protein
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setRecommendationCategory('healthy_snack')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    recommendationCategory === 'healthy_snack'
-                      ? 'bg-amber-600 text-white shadow-sm'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
-                  }`}
-                >
-                  🍿 Camilan Sehat
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={handleAskAiRecipe}
-                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 active:scale-95 ml-auto"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Saran AI</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Recommendation Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recommendedMeals.length > 0 ? (
-                recommendedMeals.slice(0, 6).map((meal) => (
-                  <div 
-                    key={meal.id} 
-                    className="bg-zinc-50/70 dark:bg-zinc-950/40 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between space-y-3 hover:border-emerald-500/50 transition-all group overflow-hidden"
-                  >
-                    {/* Pollinations AI Dynamic Food Photo */}
-                    {meal.imageUrl && (
-                      <div className="relative w-full h-36 rounded-xl overflow-hidden bg-zinc-200 dark:bg-zinc-800 -mt-1 shadow-inner">
-                        <img 
-                          src={meal.imageUrl} 
-                          alt={meal.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                        />
-                        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-white/20">
-                          <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-                          <span>AI Photo</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl group-hover:scale-110 transition-transform">{meal.iconEmoji}</span>
-                          <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug">{meal.name}</h4>
-                        </div>
-                        <span className="text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-md flex-shrink-0">
-                          {meal.calories} kcal
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
-                        {meal.description}
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] text-zinc-400 pt-1">
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-md">
-                          {meal.protein}g Protein
-                        </span>
-                        <span>•</span>
-                        <span>{meal.carbs}g Karbo</span>
-                        <span>•</span>
-                        <span>{meal.fat}g Lemak</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleQuickAddMeal(meal)}
-                      className={`w-full py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
-                        addedMealId === meal.id
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-white dark:bg-zinc-900 hover:bg-emerald-600 hover:text-white border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 shadow-sm'
-                      }`}
-                    >
-                      {addedMealId === meal.id ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Berhasil Dicatat! 🎉</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-3.5 h-3.5 text-emerald-500 group-hover:text-white" />
-                          <span>+ Catat Langsung</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full py-8 text-center text-zinc-400">
-                  <ChefHat className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-xs">Tidak ada menu yang cocok untuk filter ini. Coba ubah kategori filter.</p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -979,9 +959,150 @@ export default function FoodLogPage() {
               </div>
             </div>
           </div>
+            </>
+          )}
+
+          {/* TAB 3: Katalog Makanan Sehat Khas Indonesia */}
+          {activeFoodSubTab === 'catalog' && (
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-2xl bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
+                    <Lightbulb className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                      <span>Katalog Makanan Sehat Khas Indonesia</span>
+                      <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">
+                        Foto AI Realistis
+                      </span>
+                    </h3>
+                    <p className="text-xs text-zinc-400">Eksplorasi hidangan sehat khas Indonesia lengkap dengan foto, estimasi kalori, protein & resep</p>
+                  </div>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button 
+                    type="button"
+                    onClick={() => setRecommendationCategory('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      recommendationCategory === 'all'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200'
+                    }`}
+                  >
+                    Semua
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setRecommendationCategory('high_protein')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      recommendationCategory === 'high_protein'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200'
+                    }`}
+                  >
+                    💪 High Protein
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setRecommendationCategory('low_calorie')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      recommendationCategory === 'low_calorie'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200'
+                    }`}
+                  >
+                    🔥 Low Calorie
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setRecommendationCategory('healthy_snack')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      recommendationCategory === 'healthy_snack'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200'
+                    }`}
+                  >
+                    🍿 Healthy Snack
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid Katalog Makanan Sehat dengan Foto AI */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                {HEALTHY_MEALS_DATABASE.filter(meal => recommendationCategory === 'all' || meal.category === recommendationCategory).map((meal) => (
+                  <div 
+                    key={meal.id} 
+                    className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 hover:border-emerald-500/50 transition-all overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md"
+                  >
+                    <div>
+                      {/* AI Visual Image Cover */}
+                      <div className="relative w-full h-40 overflow-hidden bg-zinc-800">
+                        <img 
+                          src={meal.imageUrl || '/images/healthy_indonesian_food.png'} 
+                          alt={meal.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/images/healthy_indonesian_food.png';
+                          }}
+                        />
+                        <div className="absolute top-2.5 left-2.5">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-950 bg-emerald-400 px-2.5 py-1 rounded-lg shadow-sm border border-emerald-300">
+                            {meal.category.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-white font-black text-xs border border-white/10">
+                          {meal.calories} kcal
+                        </div>
+                      </div>
+
+                      <div className="p-4 space-y-2">
+                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1">{meal.name}</h4>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">{meal.description}</p>
+                        
+                        {meal.recipeTips && (
+                          <div className="text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-xl border border-emerald-200 dark:border-emerald-900/50">
+                            💡 <b>Tips Resep:</b> {meal.recipeTips}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-4 pt-0 border-t border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between mt-2">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-zinc-400">Proteins</p>
+                        <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">{meal.protein}g Protein</p>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => handleAddMealFromCatalog(meal)}
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-sm"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Catat ke Jurnal</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
       </main>
+
+      {/* Modal Alarm & Rekap Laporan Harian */}
+      <DailyRecapAlarmModal 
+        isOpen={showAlarmSettingsModal} 
+        onClose={() => setShowAlarmSettingsModal(false)} 
+        onNavigateToTab={(tab) => {
+          if (tab === 'log') setActiveFoodSubTab('log');
+          if (tab === 'sleep') setActiveFoodSubTab('sleep');
+        }}
+      />
 
       {/* Modal Edit Profil */}
       <EditProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />

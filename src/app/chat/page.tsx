@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 import ProfileCompletionBanner from '@/components/profile/ProfileCompletionBanner';
+import HowItWorksModal from '@/components/onboarding/HowItWorksModal';
 import { 
   Bot, 
   Send, 
@@ -23,7 +24,8 @@ import {
   Calculator,
   Utensils,
   Dumbbell,
-  Camera
+  Camera,
+  Sparkles
 } from 'lucide-react';
 
 export default function ChatPage() {
@@ -74,6 +76,7 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -83,6 +86,11 @@ export default function ChatPage() {
         window.location.href = '/login';
       } else {
         setAuthorized(true);
+        // Automatic First-Time Onboarding Check
+        const welcomeSeen = localStorage.getItem('gk_welcome_seen');
+        if (!welcomeSeen) {
+          setShowHowItWorksModal(true);
+        }
       }
     }
   }, [user, loading]);
@@ -356,9 +364,13 @@ export default function ChatPage() {
         {/* Navigation / Sessions */}
         <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
           <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
-          <Link href="/chat" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors">
+          <Link href="/chat" className="flex items-center gap-3 px-3 py-2.5 bg-zinc-800 text-white font-medium text-sm rounded-xl transition-colors">
             <MessageSquare className="w-4 h-4 text-emerald-500" />
             <span>Chatbot AI</span>
+          </Link>
+          <Link href="/vision" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Camera className="w-4 h-4 text-emerald-500" />
+            <span>📸 AI Food Scanner</span>
           </Link>
           <Link href="/food-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <Utensils className="w-4 h-4 text-emerald-500" />
@@ -449,13 +461,13 @@ export default function ChatPage() {
             {/* Navigation Links */}
             <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
               <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
-              <Link 
-                href="/chat" 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-zinc-800 text-white font-medium text-sm transition-colors"
-              >
+              <Link href="/chat" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 bg-zinc-800 text-white text-sm rounded-xl font-bold">
                 <MessageSquare className="w-4 h-4 text-emerald-500" />
                 <span>Chatbot AI</span>
+              </Link>
+              <Link href="/vision" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 text-sm">
+                <Camera className="w-4 h-4 text-emerald-500" />
+                <span>📸 AI Food Scanner</span>
               </Link>
               <Link 
                 href="/food-log" 
@@ -528,27 +540,26 @@ export default function ChatPage() {
               <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Sesi Chat Aktif</h2>
-              <p className="text-xs text-zinc-400">RAG AI Nutritionist Assistant</p>
+              <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Konsultasi AI Coach Mury</h2>
+              <p className="text-xs text-zinc-400">Tanyakan Nutrisi, Kalori, & Kebugaran Anda</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowHowItWorksModal(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 transition-all rounded-xl text-xs font-bold shadow-xs active:scale-95"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>❓ Cara Kerja</span>
+            </button>
             <button
               onClick={handleClearChat}
               className="text-xs font-semibold px-3 py-1.5 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 rounded-xl flex items-center gap-1.5 text-zinc-650 dark:text-zinc-450 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Reset Chat</span>
+              <span>Reset</span>
             </button>
-            {user?.role === 'admin' && (
-              <Link 
-                href="/admin" 
-                className="text-xs font-semibold px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-center gap-1 hover:bg-emerald-100 transition-colors"
-              >
-                <span>Console Admin</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            )}
           </div>
         </header>
 
@@ -636,6 +647,19 @@ export default function ChatPage() {
           </form>
         </footer>
       </main>
+
+      {/* Modal Panduan Pengguna Baru (Cara Kerja Aplikasi) */}
+      <HowItWorksModal
+        isOpen={showHowItWorksModal}
+        onClose={() => {
+          localStorage.setItem('gk_welcome_seen', 'true');
+          setShowHowItWorksModal(false);
+        }}
+        onNavigate={(path) => {
+          localStorage.setItem('gk_welcome_seen', 'true');
+          window.location.href = path;
+        }}
+      />
 
       {/* Modal Edit Profil */}
       <EditProfileModal 

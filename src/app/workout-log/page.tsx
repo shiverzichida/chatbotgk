@@ -22,6 +22,7 @@ import {
   X,
   Menu,
   Utensils,
+  Camera,
   Award,
   Activity
 } from 'lucide-react';
@@ -215,9 +216,13 @@ export default function WorkoutLogPage() {
         {/* Nav Links */}
         <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
           <p className="px-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Menu Utama</p>
-          <Link href="/chat" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
-            <MessageSquare className="w-4 h-4" />
+          <Link href="/chat" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <MessageSquare className="w-4 h-4 text-emerald-500" />
             <span>Chatbot AI</span>
+          </Link>
+          <Link href="/vision" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
+            <Camera className="w-4 h-4 text-emerald-500" />
+            <span>📸 AI Food Scanner</span>
           </Link>
           <Link href="/food-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
             <Utensils className="w-4 h-4 text-emerald-500" />

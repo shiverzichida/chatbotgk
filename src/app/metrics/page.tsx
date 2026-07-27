@@ -29,10 +29,16 @@ import {
   Menu,
   Utensils,
   Calculator,
-  ArrowRight
+  ArrowRight,
+  Camera
 } from 'lucide-react';
 import TdeeCalculatorModal from '@/components/metrics/TdeeCalculatorModal';
 import ExpeditionJourneyMap from '@/components/gamification/ExpeditionJourneyMap';
+import FitnessGamificationCard from '@/components/gamification/FitnessGamificationCard';
+import FastingTrackerCard from '@/components/fasting/FastingTrackerCard';
+import SleepTrackerCard from '@/components/sleep/SleepTrackerCard';
+import DailyCommitmentModal from '@/components/commitment/DailyCommitmentModal';
+import DailyRecapAlarmModal from '@/components/commitment/DailyRecapAlarmModal';
 
 interface LogEntry {
   id: string;
@@ -92,20 +98,15 @@ interface FoodLog {
   fat?: number;
 }
 
-// Data awal (Dummy InBody History selama 2 minggu)
-const initialDummyData: LogEntry[] = [
-  { id: '1', date: '2026-07-10', weight: 78.5, muscle: 32.1, fat: 21.3, calories: 2100, protein: 140 },
-  { id: '2', date: '2026-07-13', weight: 77.8, muscle: 32.3, fat: 20.5, calories: 2050, protein: 145 },
-  { id: '3', date: '2026-07-16', weight: 77.2, muscle: 32.5, fat: 19.8, calories: 1980, protein: 142 },
-  { id: '4', date: '2026-07-20', weight: 76.9, muscle: 32.7, fat: 19.1, calories: 2000, protein: 150 },
-  { id: '5', date: '2026-07-24', weight: 76.4, muscle: 33.0, fat: 18.2, calories: 2020, protein: 155 }
-];
+
 
 export default function MetricsPage() {
   const { user, loading, logout } = useAuth();
   const [authorized, setAuthorized] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAlarmSettingsModal, setShowAlarmSettingsModal] = useState(false);
+  const [showCommitmentModal, setShowCommitmentModal] = useState(false);
   
   // Data states
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -210,7 +211,7 @@ export default function MetricsPage() {
           if (savedLogs) {
             setLogs(JSON.parse(savedLogs));
           } else {
-            setLogs(initialDummyData);
+            setLogs([]);
           }
         }
 
@@ -271,6 +272,9 @@ export default function MetricsPage() {
 
     if (authorized) {
       fetchAllData();
+      if (typeof window !== 'undefined' && window.location.search.includes('commit=true')) {
+        setShowCommitmentModal(true);
+      }
     }
   }, [authorized]);
 
@@ -439,6 +443,7 @@ export default function MetricsPage() {
         });
       }
       setShowTargetModal(false);
+      setShowCommitmentModal(true);
     } catch (err) {
       console.error('Error creating target:', err);
       setActiveTarget({
@@ -447,7 +452,7 @@ export default function MetricsPage() {
         start_weight: parseFloat(targetForm.startWeight),
         target_weight: parseFloat(targetForm.targetWeight),
         start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date(Date.now() + parseInt(targetForm.durationWeeks)*7*24*60*60*1000).toISOString().split('T')[0],
+        end_date: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
         daily_calories_target: parseInt(targetForm.dailyCalories),
         daily_protein_target: parseInt(targetForm.dailyProtein),
         weekly_workouts_target: parseInt(targetForm.weeklyWorkouts),
@@ -455,6 +460,7 @@ export default function MetricsPage() {
         is_gamified_mode: targetForm.mode === 'gamified'
       });
       setShowTargetModal(false);
+      setShowCommitmentModal(true);
     }
   };
 
@@ -728,6 +734,10 @@ export default function MetricsPage() {
             <MessageSquare className="w-4 h-4" />
             <span>Chatbot AI</span>
           </Link>
+          <Link href="/vision" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+            <Camera className="w-4 h-4 text-emerald-500" />
+            <span>📸 AI Food Scanner</span>
+          </Link>
           <Link href="/food-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <Utensils className="w-4 h-4 text-emerald-500" />
             <span>Jurnal Makanan</span>
@@ -922,6 +932,19 @@ export default function MetricsPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+
+          {/* Gamification Level & Badges Card */}
+          <FitnessGamificationCard 
+            foodLogsCount={foodLogs.length}
+            completedWorkoutsCount={workoutLogs.length}
+            inbodyLogsCount={logs.length}
+          />
+
+          {/* Intermittent Fasting Tracker Widget */}
+          <FastingTrackerCard />
+
+          {/* Sleep & Recovery Tracker Card */}
+          <SleepTrackerCard />
           {/* Expedition Journey Map (Hanya Tampil Jika Target Aktif & Mode Game Dipilih) */}
           {activeTarget && activeTarget.is_gamified_mode !== false && (
             <ExpeditionJourneyMap 
@@ -997,13 +1020,22 @@ export default function MetricsPage() {
                 </div>
                 <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Belum Ada Program Aktif</h2>
                 <p className="text-zinc-500 dark:text-zinc-400 mb-6 max-w-md text-sm">Tetapkan target berat badan dan nutrisi Anda untuk mendapatkan panduan dan tracking yang lebih terarah bersama Gizi Kebugaran AI.</p>
-                <button 
-                  onClick={() => setShowTargetModal(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 shadow-md flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Buat Program Target Baru
-                </button>
+                <div className="flex flex-col gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCommitmentModal(true)}
+                    className="text-xs font-bold text-emerald-400 hover:text-emerald-300 underline underline-offset-4 transition-colors"
+                  >
+                    Lihat Notis Komitmen Program (3 Pilar)
+                  </button>
+                  <button 
+                    onClick={() => setShowTargetModal(true)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 shadow-md flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Buat Program Target Baru
+                  </button>
+                </div>
               </div>
             )}
           </section>
@@ -1208,6 +1240,24 @@ export default function MetricsPage() {
 
         </div>
       </main>
+
+      {/* Modal Pop-Up Notis Komitmen Program */}
+      <DailyCommitmentModal
+        isOpen={showCommitmentModal}
+        onClose={() => setShowCommitmentModal(false)}
+        onOpenAlarmModal={() => setShowAlarmSettingsModal(true)}
+      />
+
+      {/* Modal Alarm & Rekap Laporan Harian */}
+      <DailyRecapAlarmModal 
+        isOpen={showAlarmSettingsModal} 
+        onClose={() => setShowAlarmSettingsModal(false)} 
+        onNavigateToTab={(tab) => {
+          if (tab === 'log') window.location.href = '/food-log';
+          if (tab === 'workout') window.location.href = '/workout-log';
+          if (tab === 'sleep') window.location.href = '/food-log';
+        }}
+      />
 
       {/* Modal Edit Profil */}
       <EditProfileModal 

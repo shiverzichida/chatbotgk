@@ -30,20 +30,23 @@ export async function POST(req: NextRequest) {
 
     let promptText = '';
     if (mode === 'json') {
-      promptText = `Analisis gambar makanan ini. Identifikasi masakan, porsi, serta estimasi nilai nutrisinya. Kembalikan HANYA format JSON valid tanpa teks penjelasan lain di luar JSON:
+      promptText = `Anda adalah Ahli Gizi & AI Vision Specialist Kuliner Indonesia. Analisis foto makanan ini dengan cermat.
+Identifikasi nama masakan (khususnya jika hidangan khas Indonesia seperti Dada Ayam Bakar, Pepes Tahu/Ikan, Gado-Gado, Sate Ayam, Soto, Nasi Merah, Telur Rebus/Dadar, dll), estimasi porsi (gram/porsi), serta estimasi nilai nutrisinya.
+
+Kembalikan HANYA format JSON valid tanpa teks penjelasan lain di luar JSON:
 {
-  "food_name": "Nama Masakan yang Terdeteksi",
+  "food_name": "Nama Masakan Spesifik yang Terdeteksi",
   "calories": 350,
   "protein": 30,
   "carbs": 25,
   "fat": 8,
-  "description": "Penjelasan ringkas bahan makanan dan porsi"
+  "description": "Penjelasan ringkas bahan utama, cara memasak (dikukus/dipanggang/digoreng), dan estimasi porsi."
 }`;
     } else {
-      promptText = `Analisis foto masakan/piring makanan ini dengan ramah sebagai AI Coach Gizi Kebugaran. 
-1. Sebutkan nama makanan yang Anda lihat di foto.
+      promptText = `Analisis foto masakan/piring makanan ini dengan ramah sebagai AI Coach Gizi Kebugaran yang berpengalaman dalam Kuliner Indonesia. 
+1. Sebutkan nama makanan spesifik yang Anda lihat di foto.
 2. Berikan estimasi Kalori (kcal), Protein (g), Karbohidrat (g), dan Lemak (g).
-3. Berikan saran/penilaian nutrisi ringkas apakah makanan ini cocok untuk program kebugaran.`;
+3. Berikan penilaian nutrisi ringkas apakah makanan ini cocok untuk program kebugaran (Fat Loss / Muscle Gain) dan tips pengolahannya.`;
     }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {

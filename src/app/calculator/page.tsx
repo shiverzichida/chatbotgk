@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   Menu,
   X,
+  Camera,
   Info,
   ChevronRight,
   Utensils,
@@ -206,11 +207,10 @@ export default function CalculatorPage() {
         }
       }
 
-      localStorage.setItem('gk_tdee_calories', String(targetCalories));
-      localStorage.setItem('gk_tdee_protein', String(targetProtein));
-
       setApplySuccess(true);
-      setTimeout(() => setApplySuccess(false), 3500);
+      setTimeout(() => {
+        window.location.href = '/metrics?commit=true';
+      }, 1200);
     } catch (err) {
       console.error('Gagal menerapkan target dari Kalkulator:', err);
     } finally {
@@ -266,6 +266,10 @@ export default function CalculatorPage() {
           <Link href="/chat" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <MessageSquare className="w-4 h-4" />
             <span>Chatbot AI</span>
+          </Link>
+          <Link href="/vision" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 text-sm transition-colors">
+            <Camera className="w-4 h-4 text-emerald-500" />
+            <span>📸 AI Food Scanner</span>
           </Link>
           <Link href="/food-log" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 text-sm transition-colors">
             <Utensils className="w-4 h-4 text-emerald-500" />
@@ -547,27 +551,28 @@ export default function CalculatorPage() {
                 <div className="pt-2 space-y-3">
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                     {applySuccess && (
-                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold bg-emerald-950/80 px-3.5 py-2.5 rounded-xl border border-emerald-800">
-                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                        <span>Target kalori {targetCalories} kcal/hari berhasil diterapkan ke profil & target aktif Anda!</span>
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold bg-emerald-950/80 px-3.5 py-2.5 rounded-xl border border-emerald-800 animate-in fade-in">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Target berhasil diterapkan! Mengalihkan ke Komitmen Program...</span>
                       </div>
                     )}
 
-                    <button 
+                    <button
                       type="button"
                       onClick={handleApplyTarget}
-                      disabled={isApplying}
-                      className="ml-auto bg-emerald-500 hover:bg-emerald-400 text-zinc-950 px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2.5 active:scale-95 disabled:opacity-50"
+                      className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-black text-sm rounded-2xl shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 active:scale-95 ml-auto"
                     >
-                      <Sparkles className="w-4 h-4" />
-                      <span>{isApplying ? 'Menyimpan Target...' : '🔄 Terapkan / Hitung Ulang Target Saya'}</span>
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>
+                        🚀 Mulai Program {goalType === 'fat_loss' ? 'Fat Loss' : goalType === 'muscle_gain' ? 'Bulking / Muscle Gain' : goalType === 'recomposition' ? 'Body Recomposition' : 'Maintenance'}
+                      </span>
                     </button>
                   </div>
+                </div>
 
                   <p className="text-[11px] text-zinc-400 dark:text-zinc-300 italic text-right leading-relaxed bg-zinc-800/40 p-2.5 rounded-xl border border-zinc-700/40">
                     💡 <b>Anjuran Evaluasi:</b> Kami menganjurkan Anda untuk menghitung ulang TDEE setiap <b>2 minggu sekali</b> setelah program berjalan agar rekomendasi kalori selalu selaras dengan perubahan berat badan terbaru Anda.
                   </p>
-                </div>
               </div>
 
               {/* Scientific Explanation Box */}
