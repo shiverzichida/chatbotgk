@@ -99,44 +99,27 @@ export default function LoginPage() {
       </div>
 
       {/* Card Container */}
-      <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-8 w-full max-w-md relative z-10 border border-white/20 transition-all duration-300 hover:shadow-emerald-500/10 hover:shadow-3xl">
-        {/* Top Branding Badge */}
-        <div className="flex items-center justify-center mb-6">
-          <img 
-            src="/logo-gk.jpg" 
-            alt="Logo Gizi Kebugaran" 
-            className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500/50 shadow-lg shadow-emerald-600/30" 
-          />
-        </div>
-
-        {/* Headings */}
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-1 text-zinc-900 dark:text-zinc-50 tracking-tight">
-          Selamat Datang
-        </h1>
-        <p className="text-center text-emerald-700 dark:text-emerald-400 font-semibold mb-6 text-sm md:text-base">
-          Nutrition by Gizi Kebugaran
-        </p>
-
-        {/* Circular Brand Avatar */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-emerald-500/80 shadow-xl bg-zinc-100 transition-transform duration-300 hover:scale-105">
+      <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-3xl shadow-2xl p-5 sm:p-7 w-full max-w-sm sm:max-w-md relative z-10 border border-white/20 transition-all duration-300">
+        
+        {/* Brand Avatar */}
+        <div className="flex justify-center mb-3">
+          <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-emerald-500/80 shadow-lg bg-zinc-100">
             <Image
               src="/logo-gk.jpg"
               alt="Gizi Kebugaran Logo"
               fill
               className="object-cover"
-              sizes="96px"
-              onError={(e) => {
-                // Fallback jika logo tidak ter-load
-                const target = e.target as HTMLImageElement;
-                target.src = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=150';
-              }}
+              sizes="64px"
             />
           </div>
         </div>
 
-        <p className="text-center text-zinc-600 dark:text-zinc-400 mb-6 md:mb-8 text-sm md:text-base">
-          Masuk untuk memantau program kebugaran Anda
+        {/* Headings */}
+        <h1 className="text-xl sm:text-2xl font-black text-center mb-0.5 text-zinc-900 dark:text-zinc-50 tracking-tight">
+          Selamat Datang
+        </h1>
+        <p className="text-center text-emerald-600 dark:text-emerald-400 font-bold mb-4 text-xs sm:text-sm">
+          Masuk ke Gizi Kebugaran AI Coach
         </p>
 
         {/* Error Alert */}

@@ -42,16 +42,16 @@ export default function LandingPage() {
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <Link 
               href="/login" 
-              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-4 sm:py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
+              className="flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
             >
               <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Masuk</span>
             </Link>
             <Link 
-              href="/login" 
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-emerald-600/10 whitespace-nowrap"
+              href="/signup" 
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-emerald-600/10 whitespace-nowrap"
             >
-              Mulai Sekarang
+              Daftar
             </Link>
           </div>
 
