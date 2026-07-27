@@ -34,7 +34,7 @@ export default function LandingPage() {
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
             <a href="#fitur" className="hover:text-emerald-600 transition-colors">Fitur Utama</a>
-            <a href="#tentang" className="hover:text-emerald-600 transition-colors">Tentang RAG</a>
+            <a href="#fitur" className="hover:text-emerald-600 transition-colors">Keunggulan AI</a>
             <a href="#panduan" className="hover:text-emerald-600 transition-colors">Panduan Gizi</a>
           </nav>
 
@@ -71,13 +71,13 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
                 <Zap className="w-3.5 h-3.5 fill-current" />
-                RAG AI Assistant Terintegrasi
+                AI NUTRITION & FITNESS ASSISTANT
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-zinc-900 dark:text-zinc-50 leading-[1.1] tracking-tight">
                 Optimalkan Nutrisi & Kebugaran Anda Bersama <span className="text-emerald-600">AI Trainer</span>
               </h1>
               <p className="text-zinc-650 dark:text-zinc-400 text-base sm:text-lg max-w-2xl leading-relaxed mx-auto lg:mx-0">
-                Konsultasi gizi, penyusunan meal plan, serta pemantauan latihan fisik secara instan. Sistem kami terintegrasi dengan RAG (Retrieval-Augmented Generation) yang bersumber langsung dari buku panduan Gizi Kebugaran.
+                Konsultasi gizi, penyusunan meal plan, serta pemantauan latihan fisik secara instan. Sistem kecerdasan buatan kami terhubung langsung dengan basis pengetahuan ilmiah buku panduan Gizi Kebugaran resmi.
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
@@ -120,7 +120,7 @@ export default function LandingPage() {
                   <div className="flex gap-2.5 items-start">
                     <div className="w-6 h-6 rounded-full bg-emerald-600 text-[10px] text-white flex items-center justify-center font-bold">AI</div>
                     <div className="bg-emerald-50 dark:bg-emerald-950/20 text-xs p-3 rounded-2xl rounded-tl-none text-emerald-800 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30">
-                      Cukupi protein sebesar 1.6–2.2g per kg berat badan. [Rujukan: Buku Gizi Kebugaran Indofood Hal. 42]
+                      Cukupi protein sebesar 1.6–2.2g per kg berat badan. [Rujukan: Buku Gizi Kebugaran Hal. 42]
                     </div>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-lg font-bold mb-2 text-zinc-900 dark:text-zinc-50">Interaksi Real-time</h3>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Tanyakan apa saja secara bebas dan terima respon instan dari model AI kami yang di-host menggunakan teknologi Groq berkecepatan tinggi.
+                Tanyakan apa saja secara bebas dan terima respon instan dari model AI kami yang di-host menggunakan teknologi AI berkecepatan tinggi.
               </p>
             </div>
 
@@ -163,9 +163,9 @@ export default function LandingPage() {
               <div className="p-3 bg-emerald-600 text-white rounded-xl w-fit mb-6 shadow-md shadow-emerald-600/10">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold mb-2 text-zinc-900 dark:text-zinc-50">Valid RAG (Buku Panduan)</h3>
+              <h3 className="text-lg font-bold mb-2 text-zinc-900 dark:text-zinc-50">Pengetahuan Berbasis Sains</h3>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Jawaban tidak bersifat halusinasi karena AI mencocokkan kata kunci ke basis data PDF panduan gizi dan olahraga resmi milik ANOKI & Indofood.
+                Jawaban yang diberikan AI bersumber dari basis data ilmiah panduan gizi dan kebugaran olahraga terverifikasi.
               </p>
             </div>
 
