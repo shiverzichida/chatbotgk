@@ -1,16 +1,20 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { Dumbbell, ShieldCheck, Zap, MessageSquare, ArrowRight, User, TrendingUp } from 'lucide-react';
+import MessageBubble from '@/components/animations/MessageBubble';
+import TypingIndicator from '@/components/animations/TypingIndicator';
 
 export default function LandingPage() {
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token'))) {
       window.location.href = `/reset-password${window.location.hash}`;
     }
   }, []);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col font-sans text-zinc-900 dark:text-zinc-50 overflow-x-hidden">
       
@@ -38,21 +42,25 @@ export default function LandingPage() {
             <a href="#panduan" className="hover:text-emerald-600 transition-colors">Panduan Gizi</a>
           </nav>
 
-          {/* CTA Buttons - Mobile Optimized */}
+          {/* CTA Buttons - Mobile Optimized with Framer Motion Micro-interactions */}
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-            <Link 
-              href="/login" 
-              className="flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
-            >
-              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Masuk</span>
-            </Link>
-            <Link 
-              href="/signup" 
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-emerald-600/10 whitespace-nowrap"
-            >
-              Daftar
-            </Link>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <Link 
+                href="/login" 
+                className="flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-xl text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all"
+              >
+                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Masuk</span>
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <Link 
+                href="/signup" 
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-emerald-600/10 whitespace-nowrap block"
+              >
+                Daftar
+              </Link>
+            </motion.div>
           </div>
 
         </div>
@@ -60,45 +68,95 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden flex-1 flex items-center">
-        {/* Decorative background shapes */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none z-0" />
-        <div className="absolute top-1/2 right-1/4 w-[350px] h-[350px] bg-teal-500/10 dark:bg-teal-500/5 rounded-full blur-3xl pointer-events-none z-0" />
+        {/* Hero Background Image with Thick Dark Gradient Overlay */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+          <Image
+            src="/images/hero_transformation.png"
+            alt="Fitness Body Transformation Background"
+            fill
+            priority
+            className="object-cover opacity-15 dark:opacity-20 filter blur-[1px]"
+          />
+          {/* Thick Radial & Linear Dark Overlay to Ensure 100% Text Legibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-50 via-zinc-50/95 to-zinc-50/70 dark:from-zinc-950 dark:via-zinc-950/95 dark:to-zinc-950/70" />
+        </div>
+
+        {/* Decorative background ambient glows */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none z-0" />
+        <div className="absolute top-1/2 right-1/4 w-[350px] h-[350px] bg-teal-500/10 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none z-0" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
-            {/* Left Content */}
-            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
-                <Zap className="w-3.5 h-3.5 fill-current" />
+            {/* Left Content with Framer Motion Entrance Animations */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="lg:col-span-7 space-y-6 text-center lg:text-left drop-shadow-sm"
+            >
+              <motion.span
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-black uppercase tracking-wider border border-emerald-300 dark:border-emerald-800 shadow-sm"
+              >
+                <Zap className="w-3.5 h-3.5 fill-current text-amber-400 animate-pulse" />
                 AI NUTRITION & FITNESS ASSISTANT
-              </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-zinc-900 dark:text-zinc-50 leading-[1.1] tracking-tight">
-                Optimalkan Nutrisi & Kebugaran Anda Bersama <span className="text-emerald-600">AI Trainer</span>
-              </h1>
-              <p className="text-zinc-650 dark:text-zinc-400 text-base sm:text-lg max-w-2xl leading-relaxed mx-auto lg:mx-0">
-                Konsultasi gizi, penyusunan meal plan, serta pemantauan latihan fisik secara instan. Sistem kecerdasan buatan kami terhubung langsung dengan basis pengetahuan ilmiah buku panduan Gizi Kebugaran resmi.
-              </p>
+              </motion.span>
               
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                <Link 
-                  href="/login" 
-                  className="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 flex items-center justify-center gap-2 group"
-                >
-                  <span>Coba Chatbot Sekarang</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <a 
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-4xl sm:text-5xl lg:text-6xl font-black text-zinc-900 dark:text-white leading-[1.1] tracking-tight"
+              >
+                Optimalkan Nutrisi & Kebugaran Anda Bersama <span className="text-emerald-600 dark:text-emerald-400">AI Trainer</span>
+              </motion.h1>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-zinc-700 dark:text-zinc-300 text-base sm:text-lg max-w-2xl leading-relaxed mx-auto lg:mx-0 font-medium"
+              >
+                Konsultasi gizi, penyusunan meal plan, serta pemantauan latihan fisik secara instan. Sistem kecerdasan buatan kami terhubung langsung dengan basis pengetahuan ilmiah buku panduan Gizi Kebugaran resmi.
+              </motion.p>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
+              >
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
+                  <Link 
+                    href="/login" 
+                    className="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 flex items-center justify-center gap-2 group"
+                  >
+                    <span>Coba Chatbot Sekarang</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </motion.div>
+                
+                <motion.a 
+                  whileHover={{ scale: 1.05 }} 
+                  whileTap={{ scale: 0.95 }}
                   href="#fitur" 
-                  className="w-full sm:w-auto px-8 py-3.5 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-850 rounded-xl font-semibold text-center text-zinc-700 dark:text-zinc-300 transition-all"
+                  className="w-full sm:w-auto px-8 py-3.5 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-850 rounded-xl font-bold text-center text-zinc-700 dark:text-zinc-300 transition-all block"
                 >
                   Pelajari Selengkapnya
-                </a>
-              </div>
-            </div>
+                </motion.a>
+              </motion.div>
+            </motion.div>
 
-            {/* Right Interactive Mockup / Logo Display */}
-            <div className="lg:col-span-5 flex justify-center">
+            {/* Right Interactive Chatbot Mockup with Animated Entrance & Live Bubbles */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+              className="lg:col-span-5 flex justify-center"
+            >
               <div className="relative w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-3xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-900 p-6 flex flex-col justify-between">
                 <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-4">
                   <div className="flex items-center gap-2.5">
@@ -106,31 +164,39 @@ export default function LandingPage() {
                     <div className="w-3.5 h-3.5 rounded-full bg-yellow-400" />
                     <div className="w-3.5 h-3.5 rounded-full bg-green-400" />
                   </div>
-                  <span className="text-xs text-zinc-400 font-semibold font-mono">chatbot.active</span>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold font-mono flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    chatbot.active
+                  </span>
                 </div>
                 
-                {/* Simulated Conversation */}
-                <div className="flex-1 flex flex-col justify-center space-y-4 my-4">
-                  <div className="flex gap-2.5 items-start">
-                    <div className="w-6 h-6 rounded-full bg-zinc-700 text-[10px] text-white flex items-center justify-center font-bold">U</div>
-                    <div className="bg-zinc-100 dark:bg-zinc-800 text-xs p-3 rounded-2xl rounded-tl-none text-zinc-700 dark:text-zinc-300">
-                      Bagaimana cara mencukupi protein harian untuk fat loss?
-                    </div>
-                  </div>
-                  <div className="flex gap-2.5 items-start">
-                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-[10px] text-white flex items-center justify-center font-bold">AI</div>
-                    <div className="bg-emerald-50 dark:bg-emerald-950/20 text-xs p-3 rounded-2xl rounded-tl-none text-emerald-800 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30">
-                      Cukupi protein sebesar 1.6–2.2g per kg berat badan. [Rujukan: Buku Gizi Kebugaran Hal. 42]
-                    </div>
-                  </div>
+                {/* Animated Simulated Conversation */}
+                <div className="flex-1 flex flex-col justify-center space-y-3.5 my-3 overflow-hidden">
+                  <MessageBubble
+                    isBot={false}
+                    text="Bagaimana cara mencukupi protein harian untuk fat loss?"
+                    delay={0.5}
+                  />
+                  <MessageBubble
+                    isBot={true}
+                    text="Cukupi protein sebesar 1.6–2.2g per kg berat badan."
+                    referenceText="[Rujukan: Buku Gizi Kebugaran Hal. 42]"
+                    delay={0.8}
+                  />
                 </div>
 
-                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3 flex gap-2">
-                  <div className="flex-1 h-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 rounded-lg" />
-                  <div className="w-8 h-8 bg-emerald-600 rounded-lg" />
+                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3 flex items-center justify-between gap-2">
+                  <div className="flex-1 h-9 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 rounded-xl px-3 flex items-center text-xs text-zinc-400 font-medium">
+                    <span>Tanyakan nutrisi olahraga...</span>
+                  </div>
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <div className="w-9 h-9 bg-emerald-600 hover:bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-md cursor-pointer transition-colors">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </motion.div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
           </div>
         </div>
