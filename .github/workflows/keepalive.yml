@@ -1,0 +1,31 @@
+name: Supabase Database KeepAlive Ping
+
+on:
+  schedule:
+    # Runs every 4 days at 00:00 UTC to keep Supabase free project active
+    - cron: '0 0 */4 * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📡 Ping Supabase REST API Endpoint
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://okyqjbojxtylnuqaewyx.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reXFqYm9qeHR5bG51cWFFd3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk3NjA2NTMsImV4cCI6MjA0NTMzNjY1M30.6iGz5-3t_pZ-55s1n_lV7V40q0q43x2' }}
+        run: |
+          echo "Pinging Supabase REST API to prevent inactivity pause..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/profiles?select=id&limit=1")
+          
+          echo "Supabase Response Status Code: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 206 ]; then
+            echo "✅ Supabase is active and healthy!"
+          else
+            echo "⚠️ Unexpected status code: $HTTP_STATUS (Project active query ping completed)"
+          fi
