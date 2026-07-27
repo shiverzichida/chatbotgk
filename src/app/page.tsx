@@ -1,11 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Dumbbell, ShieldCheck, Zap, MessageSquare, ArrowRight, User, TrendingUp } from 'lucide-react';
 
 export default function LandingPage() {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token'))) {
+      window.location.href = `/reset-password${window.location.hash}`;
+    }
+  }, []);
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col font-sans text-zinc-900 dark:text-zinc-50 overflow-x-hidden">
       

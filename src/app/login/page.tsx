@@ -15,6 +15,12 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token'))) {
+      window.location.href = `/reset-password${window.location.hash}`;
+    }
+  }, []);
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {

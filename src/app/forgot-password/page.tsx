@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
     try {
       const redirectToUrl = typeof window !== 'undefined' 
         ? `${window.location.origin}/reset-password` 
-        : 'http://localhost:3000/reset-password';
+        : 'https://chatbotgk.vercel.app/reset-password';
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectToUrl,
