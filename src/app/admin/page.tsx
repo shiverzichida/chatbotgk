@@ -104,6 +104,24 @@ export default function AdminPage() {
     { id: '3', title: 'Meal Plan Fat Loss Kategori Obesitas', type: 'Meal Plan', size: '920 KB', status: 'processed', date: '2026-07-20' },
   ]);
 
+  // DOCUMENT TABLE SEARCH & PAGINATION
+  const [docSearchQuery, setDocSearchQuery] = useState('');
+  const [docCurrentPage, setDocCurrentPage] = useState(1);
+  const DOCS_PER_PAGE = 5;
+
+  // Filter documents by search query
+  const filteredDocuments = documents.filter(doc => 
+    doc.title.toLowerCase().includes(docSearchQuery.toLowerCase()) ||
+    doc.type.toLowerCase().includes(docSearchQuery.toLowerCase()) ||
+    doc.date.toLowerCase().includes(docSearchQuery.toLowerCase())
+  );
+
+  // Pagination calculations
+  const totalDocPages = Math.ceil(filteredDocuments.length / DOCS_PER_PAGE) || 1;
+  const currentDocPage = Math.min(docCurrentPage, totalDocPages);
+  const startDocIdx = (currentDocPage - 1) * DOCS_PER_PAGE;
+  const paginatedDocuments = filteredDocuments.slice(startDocIdx, startDocIdx + DOCS_PER_PAGE);
+
   // TAB 2: SYSTEM PROMPT & PLAYGROUND
   const [promptPersonality, setPromptPersonality] = useState('');
   const [promptNutrition, setPromptNutrition] = useState('');
@@ -233,6 +251,7 @@ export default function AdminPage() {
       const data = await res.json();
       if (data.users) {
         setUsersList(data.users);
+        setTotalUsersCount(data.users.length);
       }
     } catch (e) {
       console.error('Gagal mengambil daftar pengguna:', e);
@@ -1228,12 +1247,17 @@ export default function AdminPage() {
                   <input
                     type="text"
                     placeholder="Cari dokumen..."
-                    className="w-48 pl-9 pr-4 py-1.5 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={docSearchQuery}
+                    onChange={(e) => {
+                      setDocSearchQuery(e.target.value);
+                      setDocCurrentPage(1);
+                    }}
+                    className="w-52 pl-9 pr-4 py-1.5 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                   />
                 </div>
               </div>
 
-              <div className="flex-1 overflow-x-auto">
+              <div className="flex-1 overflow-x-auto flex flex-col justify-between">
                 <table className="w-full text-left border-collapse min-w-[550px]">
                   <thead>
                     <tr className="bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 text-xs font-bold uppercase text-zinc-400">
@@ -1245,22 +1269,74 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">
-                    {documents.map((doc) => (
-                      <tr key={doc.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20">
-                        <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-zinc-50">{doc.title}</td>
-                        <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">{doc.type}</td>
-                        <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">{doc.size}</td>
-                        <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">{doc.date}</td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Saved to DB
-                          </span>
+                    {paginatedDocuments.length > 0 ? (
+                      paginatedDocuments.map((doc) => (
+                        <tr key={doc.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-zinc-50">{doc.title}</td>
+                          <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">{doc.type}</td>
+                          <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">{doc.size}</td>
+                          <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 text-xs">{doc.date}</td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Saved to DB
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-8 text-center text-zinc-400 text-xs font-medium">
+                          {docSearchQuery ? `Tidak ada dokumen yang cocok dengan "${docSearchQuery}"` : 'Belum ada dokumen terdaftar.'}
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
+
+                {/* Table Footer with Pagination Controls */}
+                <div className="px-6 py-3.5 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs bg-zinc-50/50 dark:bg-zinc-950/50 mt-auto">
+                  <div className="text-zinc-500 dark:text-zinc-400">
+                    Menampilkan <span className="font-semibold text-zinc-900 dark:text-zinc-100">{filteredDocuments.length > 0 ? startDocIdx + 1 : 0}</span> sampai <span className="font-semibold text-zinc-900 dark:text-zinc-100">{Math.min(startDocIdx + DOCS_PER_PAGE, filteredDocuments.length)}</span> dari <span className="font-semibold text-zinc-900 dark:text-zinc-100">{filteredDocuments.length}</span> dokumen
+                  </div>
+
+                  {totalDocPages > 1 && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        disabled={currentDocPage === 1}
+                        onClick={() => setDocCurrentPage(prev => Math.max(prev - 1, 1))}
+                        className="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      >
+                        Sebelumnya
+                      </button>
+
+                      {Array.from({ length: totalDocPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setDocCurrentPage(page)}
+                          className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                            currentDocPage === page
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+
+                      <button
+                        type="button"
+                        disabled={currentDocPage === totalDocPages}
+                        onClick={() => setDocCurrentPage(prev => Math.min(prev + 1, totalDocPages))}
+                        className="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      >
+                        Selanjutnya
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
