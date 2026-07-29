@@ -44,38 +44,87 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Ambil konteks dokumen dari Supabase menggunakan Keyword Search (fallback RAG gratis)
+    // 2. Ambil konteks dokumen dari Supabase menggunakan Smart Multi-Keyword RAG & Relevance Scoring
     let contextText = '';
     let citations: any[] = [];
 
     try {
-      const keywords = message
+      const GENERIC_STOPWORDS = new Set([
+        'yang', 'akan', 'dari', 'total', 'dengan', 'pada', 'atau', 'bisa', 'bila',
+        'adalah', 'sebab', 'dapat', 'hanya', 'jika', 'untuk', 'oleh', 'maka', 'serta',
+        'dalam', 'tubuh', 'efektif', 'menyebabkan', 'halo', 'saya', 'apa', 'bagaimana',
+        'berdampak', 'adalah', 'pada', 'ini', 'itu'
+      ]);
+
+      const rawTerms = message
         .toLowerCase()
-        .replace(/[^a-zA-Z0-9\s]/g, '')
+        .replace(/[^a-zA-Z0-9%\s]/g, ' ')
         .split(/\s+/)
-        .filter((w: string) => w.length > 3);
+        .filter((w: string) => w.length >= 2 && !GENERIC_STOPWORDS.has(w));
 
-      if (keywords.length > 0) {
-        let query = dbClient.from('document_chunks').select('content, chapter_title, page_start');
-        if (focus_chapter && focus_chapter !== '__all__') {
-          query = query.eq('chapter_title', focus_chapter);
+      if (rawTerms.length > 0) {
+        let candidateChunks: any[] = [];
+
+        // Step 1: Collect candidates using specific keywords
+        for (const term of rawTerms.slice(0, 6)) {
+          let q = dbClient
+            .from('document_chunks')
+            .select('id, content, chapter_title, page_start')
+            .ilike('content', `%${term}%`);
+
+          if (focus_chapter && focus_chapter !== '__all__') {
+            q = q.eq('chapter_title', focus_chapter);
+          }
+
+          const { data: matched } = await q.limit(10);
+          if (matched && matched.length > 0) {
+            candidateChunks.push(...matched);
+          }
         }
-        const filterOr = keywords.map((k: string) => `content.ilike.%${k}%`).join(',');
-        const { data: chunks, error: dbError } = await query.or(filterOr).limit(3);
 
-        if (!dbError && chunks && chunks.length > 0) {
-          contextText = chunks
+        // Deduplicate candidates by chunk ID
+        const uniqueMap = new Map<string, any>();
+        for (const c of candidateChunks) {
+          if (!uniqueMap.has(c.id)) {
+            uniqueMap.set(c.id, c);
+          }
+        }
+        const uniqueCandidates = Array.from(uniqueMap.values());
+
+        // Step 2: Score candidates based on keyword frequency & term density
+        const scoredCandidates = uniqueCandidates.map((c) => {
+          const text = (c.content || '').toLowerCase();
+          let score = 0;
+
+          for (const term of rawTerms) {
+            if (text.includes(term)) {
+              const isSpecific = term.includes('%') || term.length >= 5 || !isNaN(Number(term));
+              const weight = isSpecific ? 10 : 3;
+              const matchesCount = (text.split(term).length - 1);
+              score += weight * Math.min(matchesCount, 3);
+            }
+          }
+
+          return { ...c, score };
+        });
+
+        // Sort descending by score
+        scoredCandidates.sort((a, b) => b.score - a.score);
+        const topChunks = scoredCandidates.slice(0, 3);
+
+        if (topChunks.length > 0) {
+          contextText = topChunks
             .map(c => `[Rujukan Bab: ${c.chapter_title || 'Umum'} (Halaman ${c.page_start || 'N/A'})]: ${c.content}`)
             .join('\n\n');
-          
-          citations = chunks.map(c => ({
+
+          citations = topChunks.map(c => ({
             title: c.chapter_title || 'Buku Panduan',
             page: c.page_start || 0
           }));
         }
       }
     } catch (e) {
-      console.warn('Gagal melakukan keyword RAG di Supabase, lanjut tanpa RAG:', e);
+      console.warn('Gagal melakukan smart keyword RAG di Supabase, lanjut tanpa RAG:', e);
     }
 
     // 3. Ambil system prompt modular dari database (atau gunakan override dari playground admin)
@@ -256,7 +305,7 @@ JANGAN PERNAH menyertakan [ACTION_BUTTON...] di jawaban Anda!`;
 
     // Tambahkan konteks rujukan ke system prompt jika ada
     if (contextText) {
-      systemPrompt += `\n\nBerikut rujukan tepercaya dari buku panduan Gizi Kebugaran:\n${contextText}\n\nJawablah dengan merujuk pada teks di atas secara mengalir dan alami. Jangan menyebutkan "berdasarkan rujukan di atas" secara tersurat.`;
+      systemPrompt += `\n\n=== TEKS RUJUKAN RESMI DARI BUKU PANDUAN ===\n${contextText}\n\nINSTRUKSI KETAT RUJUKAN: Jawablah pertanyaan pengguna secara presisi, akurat, dan lengkap berdasarkan fakta yang tertera di Teks Rujukan Resmi di atas. Jika teks rujukan menyebutkan angka persentase (seperti 2% atau 10-20%), atau akibat/dampak tertentu (seperti fungsi kardiovaskular, RPE/persepsi usaha, hipertermia, atau pengosongan lambung), sebutkan poin-poin spesifik tersebut secara mendalam.`;
     }
 
     const messages = [

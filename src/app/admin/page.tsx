@@ -88,8 +88,10 @@ export default function AdminPage() {
   const [isLocalhost, setIsLocalhost] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<'text' | 'pdf'>('text');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfFiles, setPdfFiles] = useState<File[]>([]);
   const [pdfChapter, setPdfChapter] = useState('');
   const [pdfType, setPdfType] = useState('Nutrition Guideline');
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; fileName: string } | null>(null);
   
   useEffect(() => {
     setIsLocalhost(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -519,49 +521,68 @@ export default function AdminPage() {
     }
   };
 
-  // UPLOAD PDF ACTION (TAB 1)
+  // UPLOAD BATCH PDF ACTION (TAB 1)
   const handlePdfUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pdfFile || !pdfChapter) return;
+    const filesToUpload = pdfFiles.length > 0 ? pdfFiles : (pdfFile ? [pdfFile] : []);
+    if (filesToUpload.length === 0) return;
 
     setIsUploading(true);
     setUploadStatus(null);
+    setBatchProgress(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      const formData = new FormData();
-      formData.append('action', 'upload_pdf');
-      formData.append('file', pdfFile);
-      formData.append('chapter', pdfChapter);
-      formData.append('type', pdfType);
+      let successCount = 0;
+      const totalCount = filesToUpload.length;
 
-      const res = await fetch('/api/admin', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      for (let i = 0; i < totalCount; i++) {
+        const file = filesToUpload[i];
+        const chapterName = pdfChapter 
+          ? (totalCount > 1 ? `${pdfChapter} - ${file.name.replace(/\.pdf$/i, '')}` : pdfChapter)
+          : file.name.replace(/\.pdf$/i, '');
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Gagal upload PDF');
+        setBatchProgress({ current: i + 1, total: totalCount, fileName: file.name });
+
+        const formData = new FormData();
+        formData.append('action', 'upload_pdf');
+        formData.append('file', file);
+        formData.append('chapter', chapterName);
+        formData.append('type', pdfType);
+
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || `Gagal upload PDF ${file.name}`);
+        }
+
+        const newDoc = {
+          id: String(Date.now() + i),
+          title: chapterName,
+          type: pdfType,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+          status: 'processed',
+          date: new Date().toISOString().split('T')[0]
+        };
+        setDocuments(prev => [newDoc, ...prev]);
+        successCount++;
       }
 
-      const newDoc = {
-        id: String(Date.now()),
-        title: pdfChapter || pdfFile.name,
-        type: pdfType,
-        size: `${(pdfFile.size / 1024).toFixed(1)} KB`,
-        status: 'processed',
-        date: new Date().toISOString().split('T')[0]
-      };
-      setDocuments(prev => [newDoc, ...prev]);
-
-      setUploadStatus({ type: 'success', message: `PDF "${pdfFile.name}" berhasil diproses dan disimpan!` });
+      setUploadStatus({ 
+        type: 'success', 
+        message: `Berhasil memproses ${successCount} file PDF! Seluruh teks telah dipotong (chunking) dan disimpan ke database.` 
+      });
       setPdfFile(null);
+      setPdfFiles([]);
       setPdfChapter('');
       fetchDbStats(); // Refresh stats count
     } catch (err: any) {
@@ -569,6 +590,7 @@ export default function AdminPage() {
       setUploadStatus({ type: 'error', message: `Gagal mengunggah PDF: ${err.message}` });
     } finally {
       setIsUploading(false);
+      setBatchProgress(null);
     }
   };
 
@@ -1069,21 +1091,56 @@ export default function AdminPage() {
                   <form onSubmit={handlePdfUpload} className="space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-xs font-bold uppercase text-zinc-400 mb-2">File PDF</label>
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="block text-xs font-bold uppercase text-zinc-400">File PDF (Bisa Pilih Beberapa)</label>
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                            Multi-Upload Support
+                          </span>
+                        </div>
                         <input
                           type="file"
                           accept=".pdf"
-                          required
-                          onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                          className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          multiple
+                          required={pdfFiles.length === 0}
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            setPdfFiles(files);
+                            setPdfFile(files[0] || null);
+                          }}
+                          className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                         />
                       </div>
+
+                      {/* Selected Files Preview */}
+                      {pdfFiles.length > 0 && (
+                        <div className="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 max-h-36 overflow-y-auto">
+                          <div className="flex justify-between items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            <span>📁 Terpilih ({pdfFiles.length} File PDF)</span>
+                            <button
+                              type="button"
+                              onClick={() => { setPdfFiles([]); setPdfFile(null); }}
+                              className="text-[10px] text-red-500 hover:underline font-semibold"
+                            >
+                              Hapus Semua
+                            </button>
+                          </div>
+                          {pdfFiles.map((f, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-[11px] text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-950 p-1.5 rounded-lg border border-zinc-200/60 dark:border-zinc-800/60">
+                              <span className="truncate max-w-[200px] font-medium">📄 {f.name}</span>
+                              <span className="text-zinc-400 text-[10px]">{(f.size / 1024).toFixed(0)} KB</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div>
-                        <label className="block text-xs font-bold uppercase text-zinc-400 mb-2">Judul Dokumen / Bab</label>
+                        <label className="block text-xs font-bold uppercase text-zinc-400 mb-2">
+                          Judul Dokumen / Bab {pdfFiles.length > 1 && <span className="text-zinc-500 text-[10px] font-normal">(Opsional jika upload banyak)</span>}
+                        </label>
                         <input
                           type="text"
-                          required
-                          placeholder="Bab 2: Kebugaran..."
+                          required={pdfFiles.length <= 1}
+                          placeholder={pdfFiles.length > 1 ? "Judul prefiks (opsional)..." : "Bab 2: Kebugaran..."}
                           value={pdfChapter}
                           onChange={(e) => setPdfChapter(e.target.value)}
                           className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -1102,7 +1159,22 @@ export default function AdminPage() {
                         </select>
                       </div>
                     </div>
+
                     <div className="pt-4 mt-auto">
+                      {/* Batch Progress Bar Indicator */}
+                      {batchProgress && (
+                        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 space-y-1.5 mb-3">
+                          <div className="flex justify-between font-bold">
+                            <span>Memproses File {batchProgress.current} dari {batchProgress.total}</span>
+                            <span>{Math.round((batchProgress.current / batchProgress.total) * 100)}%</span>
+                          </div>
+                          <p className="truncate text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">📄 {batchProgress.fileName}</p>
+                          <div className="w-full h-2 bg-emerald-200 dark:bg-emerald-900 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }} />
+                          </div>
+                        </div>
+                      )}
+
                       {uploadStatus && (
                         <div className={`p-3.5 rounded-xl border text-xs flex gap-2.5 items-start mb-4 ${
                           uploadStatus.type === 'success' 
@@ -1119,18 +1191,18 @@ export default function AdminPage() {
                       )}
                       <button
                         type="submit"
-                        disabled={isUploading}
-                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-md"
+                        disabled={isUploading || (pdfFiles.length === 0 && !pdfFile)}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
                       >
                         {isUploading ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Memproses PDF...</span>
+                            <span>Memproses Batch PDF...</span>
                           </>
                         ) : (
                           <>
                             <Database className="w-4 h-4" />
-                            <span>Proses PDF (OCR & Chunking)</span>
+                            <span>{pdfFiles.length > 1 ? `Proses ${pdfFiles.length} File PDF Sekaligus` : 'Proses PDF (OCR & Chunking)'}</span>
                           </>
                         )}
                       </button>
