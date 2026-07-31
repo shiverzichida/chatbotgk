@@ -21,10 +21,11 @@ import {
   Settings,
   Terminal,
   HelpCircle,
-  TrendingUp,
   RefreshCw,
   Award,
   Utensils,
+  Download,
+  TrendingUp,
   Menu,
   X
 } from 'lucide-react';
@@ -150,9 +151,20 @@ export default function AdminPage() {
 
   // TAB 3: USER MANAGER & INTERVENSI CHAT
   const [usersList, setUsersList] = useState<UserProfile[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   
+  // Filtered Users List by Search Query
+  const filteredUsersList = usersList.filter(u => {
+    const query = userSearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    const fullName = (u.full_name || '').toLowerCase();
+    const goal = (u.goal_type || '').toLowerCase();
+    const gender = (u.gender || '').toLowerCase();
+    return fullName.includes(query) || goal.includes(query) || gender.includes(query);
+  });
+
   // Chat History Per User
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [userChatMessages, setUserChatMessages] = useState<ChatMessage[]>([]);
@@ -160,6 +172,101 @@ export default function AdminPage() {
   const [interventionInput, setInterventionInput] = useState('');
   const [isSendingIntervention, setIsSendingIntervention] = useState(false);
   const userChatEndRef = useRef<HTMLDivElement>(null);
+
+  // EXPORT CHAT FUNCTIONS (EXCEL & PDF)
+  const handleExportChatExcel = (targetUser: UserProfile | null, messages: ChatMessage[]) => {
+    if (!targetUser || messages.length === 0) return;
+
+    let csvContent = `Waktu,Pengirim,Isi Pesan\n`;
+
+    messages.forEach(msg => {
+      const timeStr = new Date(msg.created_at).toLocaleString('id-ID');
+      const sender = msg.sender === 'user' ? (targetUser.full_name || 'User') : 'AI Assistant';
+      const cleanContent = `"${(msg.content || '').replace(/"/g, '""')}"`;
+      csvContent += `"${timeStr}","${sender}",${cleanContent}\n`;
+    });
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fileName = `Chat_History_${(targetUser.full_name || 'User').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportChatPdf = (targetUser: UserProfile | null, messages: ChatMessage[]) => {
+    if (!targetUser || messages.length === 0) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const title = `Laporan Chat AI - ${targetUser.full_name || 'User'}`;
+    const dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${title}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; color: #18181b; background: #fff; }
+          .header { border-bottom: 2px solid #059669; padding-bottom: 15px; margin-bottom: 20px; }
+          .header h1 { margin: 0 0 5px 0; color: #059669; font-size: 20px; }
+          .header p { margin: 3px 0; font-size: 12px; color: #52525b; }
+          .chat-container { display: flex; flex-direction: column; gap: 12px; }
+          .msg { padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.5; max-width: 85%; }
+          .user-msg { background-color: #f4f4f5; border: 1px solid #e4e4e7; margin-right: auto; }
+          .ai-msg { background-color: #ecfdf5; border: 1px solid #a7f3d0; margin-left: auto; color: #064e3b; }
+          .sender-name { font-weight: bold; font-size: 11px; margin-bottom: 4px; display: block; }
+          .time { font-size: 10px; color: #71717a; margin-top: 6px; display: block; text-align: right; }
+          .footer { margin-top: 30px; border-top: 1px solid #e4e4e7; padding-top: 10px; font-size: 10px; color: #a1a1aa; text-align: center; }
+          @media print {
+            body { margin: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Laporan Percakapan Gizi Kebugaran AI</h1>
+          <p><strong>Nama Pengguna:</strong> ${targetUser.full_name || 'User'} (${targetUser.gender || 'N/A'}, Target: ${targetUser.goal_type || 'N/A'})</p>
+          <p><strong>Tanggal Ekspor:</strong> ${dateStr}</p>
+          <p><strong>Total Pesan:</strong> ${messages.length} Pesan</p>
+        </div>
+
+        <div class="chat-container">
+          ${messages.map(m => {
+            const isUser = m.sender === 'user';
+            const senderLabel = isUser ? (targetUser.full_name || 'Pengguna') : '🤖 Gizi Kebugaran AI Assistant';
+            const time = new Date(m.created_at).toLocaleString('id-ID');
+            return `
+              <div class="msg ${isUser ? 'user-msg' : 'ai-msg'}">
+                <span class="sender-name">${senderLabel}</span>
+                <div>${(m.content || '').replace(/\n/g, '<br/>')}</div>
+                <span class="time">${time}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="footer">
+          Dicetak secara otomatis oleh Console Admin Gizi Kebugaran AI • ${new Date().getFullYear()}
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
 
   // AUTH PROTECT EFFECT
   useEffect(() => {
@@ -1593,8 +1700,10 @@ export default function AdminPage() {
                   <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
                     placeholder="Cari user..."
-                    className="w-full pl-9 pr-4 py-1.5 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full pl-9 pr-4 py-1.5 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                   />
                 </div>
               </div>
@@ -1606,12 +1715,12 @@ export default function AdminPage() {
                     <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-2" />
                     <p className="text-xs text-zinc-500">Memuat daftar user...</p>
                   </div>
-                ) : usersList.length === 0 ? (
+                ) : filteredUsersList.length === 0 ? (
                   <div className="p-8 text-center text-xs text-zinc-400">
-                    Belum ada user yang terdaftar di database.
+                    {userSearchQuery ? `Tidak ada user yang cocok dengan "${userSearchQuery}"` : 'Belum ada user yang terdaftar di database.'}
                   </div>
                 ) : (
-                  usersList.map((userItem) => (
+                  filteredUsersList.map((userItem) => (
                     <button
                       key={userItem.id}
                       onClick={() => setSelectedUser(userItem)}
@@ -1647,7 +1756,7 @@ export default function AdminPage() {
               {selectedUser ? (
                 <>
                   {/* Active Header */}
-                  <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/30 flex-shrink-0">
+                  <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/30 flex-shrink-0 flex-wrap gap-2">
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={() => setSelectedUser(null)} 
@@ -1664,10 +1773,33 @@ export default function AdminPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900/40 px-2.5 py-1 rounded-full animate-pulse">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      LIVE FEED
-                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleExportChatExcel(selectedUser, userChatMessages)}
+                        disabled={userChatMessages.length === 0}
+                        className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm active:scale-95"
+                        title="Ekspor Seluruh Chat User Ini ke Excel (.csv)"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Ekspor Excel</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportChatPdf(selectedUser, userChatMessages)}
+                        disabled={userChatMessages.length === 0}
+                        className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm active:scale-95"
+                        title="Cetak / Simpan Chat User Ini ke PDF"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Ekspor PDF</span>
+                      </button>
+                      <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900/40 px-2.5 py-1 rounded-full animate-pulse ml-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        LIVE FEED
+                      </span>
+                    </div>
                   </div>
 
                   {/* Messages Feed */}
@@ -1760,8 +1892,10 @@ export default function AdminPage() {
                   <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
                     placeholder="Cari user..."
-                    className="w-full pl-9 pr-4 py-1.5 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full pl-9 pr-4 py-1.5 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                   />
                 </div>
               </div>
@@ -1773,12 +1907,12 @@ export default function AdminPage() {
                     <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-2" />
                     <p className="text-xs text-zinc-500">Memuat daftar user...</p>
                   </div>
-                ) : usersList.length === 0 ? (
+                ) : filteredUsersList.length === 0 ? (
                   <div className="p-8 text-center text-xs text-zinc-400">
-                    Belum ada user yang terdaftar di database.
+                    {userSearchQuery ? `Tidak ada user yang cocok dengan "${userSearchQuery}"` : 'Belum ada user yang terdaftar di database.'}
                   </div>
                 ) : (
-                  usersList.map((userItem) => (
+                  filteredUsersList.map((userItem) => (
                     <button
                       key={userItem.id}
                       onClick={() => setSelectedUser(userItem)}
