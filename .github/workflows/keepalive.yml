@@ -1,31 +1,82 @@
-name: Supabase Database KeepAlive Ping
+name: Supabase Database KeepAlive Daily CronJob
 
 on:
   schedule:
-    # Runs every 4 days at 00:00 UTC to keep Supabase free project active
-    - cron: '0 0 */4 * *'
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+    # Runs daily at 07:15 WIB (00:15 UTC)
+    - cron: '15 0 * * *'
+  workflow_dispatch: # Manual trigger capability from GitHub Actions UI
 
 jobs:
-  ping-supabase:
-    name: Ping Supabase Database
+  keepalive-ping:
+    name: Daily Supabase Database Keep-Alive
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📡 Ping Supabase REST API Endpoint
+      - name: 📡 Execute 3-Point Keep-Alive Database Queries
         env:
-          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://okyqjbojxtylnuqaewyx.supabase.co' }}
-          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reXFqYm9qeHR5bG51cWFFd3l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk3NjA2NTMsImV4cCI6MjA0NTMzNjY1M30.6iGz5-3t_pZ-55s1n_lV7V40q0q43x2' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          APP_URL: "https://chatbotgk.vercel.app"
         run: |
-          echo "Pinging Supabase REST API to prevent inactivity pause..."
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          set -e
+
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "❌ ERROR: Secrets SUPABASE_URL or SUPABASE_ANON_KEY are missing in GitHub Secrets!"
+            exit 1
+          fi
+
+          echo "🚀 Starting Daily Keep-Alive Job at $(date -u) (07:15 WIB schedule)..."
+
+          # ----------------------------------------------------
+          # Query 1: Supabase Profiles Table Ping
+          # ----------------------------------------------------
+          echo "🔹 [Query 1/3] Pinging Supabase REST API (Profiles Table)..."
+          HTTP_STATUS_1=$(curl -s -o /dev/null -w "%{http_code}" \
+            --fail --retry 3 --retry-delay 2 \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             "$SUPABASE_URL/rest/v1/profiles?select=id&limit=1")
-          
-          echo "Supabase Response Status Code: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 206 ]; then
-            echo "✅ Supabase is active and healthy!"
-          else
-            echo "⚠️ Unexpected status code: $HTTP_STATUS (Project active query ping completed)"
+
+          echo "Status 1: $HTTP_STATUS_1"
+          if [ "$HTTP_STATUS_1" -ne 200 ] && [ "$HTTP_STATUS_1" -ne 206 ]; then
+            echo "❌ FAILED: Query 1 returned invalid status code $HTTP_STATUS_1 (Expected 200/206)"
+            exit 1
           fi
+
+          echo "⏳ Waiting 3 seconds..."
+          sleep 3
+
+          # ----------------------------------------------------
+          # Query 2: Supabase Document Chunks Table Ping
+          # ----------------------------------------------------
+          echo "🔹 [Query 2/3] Pinging Supabase REST API (Document Chunks Table)..."
+          HTTP_STATUS_2=$(curl -s -o /dev/null -w "%{http_code}" \
+            --fail --retry 3 --retry-delay 2 \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/document_chunks?select=id&limit=1")
+
+          echo "Status 2: $HTTP_STATUS_2"
+          if [ "$HTTP_STATUS_2" -ne 200 ] && [ "$HTTP_STATUS_2" -ne 206 ]; then
+            echo "❌ FAILED: Query 2 returned invalid status code $HTTP_STATUS_2 (Expected 200/206)"
+            exit 1
+          fi
+
+          echo "⏳ Waiting 3 seconds..."
+          sleep 3
+
+          # ----------------------------------------------------
+          # Query 3: Dedicated Next.js Health Check Endpoint
+          # ----------------------------------------------------
+          echo "🔹 [Query 3/3] Pinging Next.js Dedicated Health Endpoint (/api/health)..."
+          HTTP_STATUS_3=$(curl -s -o /dev/null -w "%{http_code}" \
+            --fail --retry 3 --retry-delay 2 \
+            "$APP_URL/api/health")
+
+          echo "Status 3: $HTTP_STATUS_3"
+          if [ "$HTTP_STATUS_3" -ne 200 ] && [ "$HTTP_STATUS_3" -ne 206 ]; then
+            echo "❌ FAILED: Query 3 returned invalid status code $HTTP_STATUS_3 (Expected 200/206)"
+            exit 1
+          fi
+
+          echo "🎉 SUCCESS: All 3 keep-alive queries completed with valid HTTP 200/206 status!"
